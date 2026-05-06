@@ -1210,12 +1210,36 @@ function renderReport(data) {
   }
 }
 
+// ─── SANITIZE ────────────────────────────────────────────────────────────────
+// Strips local user paths from all uri fields in-browser so the raw Squish
+// JSON can be committed to GitHub without triggering push protection secrets
+// scanning. The file on disk is never touched — sanitization is client-side.
+function sanitizeData(obj) {
+  if (Array.isArray(obj)) return obj.map(sanitizeData);
+  if (obj && typeof obj === 'object') {
+    const clean = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (k === 'uri' && typeof v === 'string') {
+        clean[k] = v
+          .replace(/file:\/\/\/[A-Za-z]:\/Users\/[^/]+\//gi, 'file:///')  // Windows
+          .replace(/file:\/\/\/home\/[^/]+\//gi,              'file:///')  // Linux
+          .replace(/file:\/\/\/Users\/[^/]+\//gi,             'file:///'); // macOS
+      } else {
+        clean[k] = sanitizeData(v);
+      }
+    }
+    return clean;
+  }
+  return obj;
+}
+
 // ─── FETCH JSON ──────────────────────────────────────────────────────────────
 async function loadReport() {
   try {
     const res = await fetch(JSON_FILE);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    const raw  = await res.json();
+    const data = sanitizeData(raw);  // scrub local paths before rendering
     renderReport(data);
   } catch (err) {
     console.error('Failed to load report:', err);
