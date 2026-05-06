@@ -1,0 +1,32 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Squish local artifacts
+*.log
+*.tmp
+squishrunner.log
+squish_server.log
+
+# Screenshots / attachments (generated at runtime)
+attachments/
+screenshots/
+*.png
+*.jpg
+*.jpeg
+
+# Node / npm (if any tooling)
+node_modules/
+npm-debug.log*
+
+# Python (if any tooling)
+__pycache__/
+*.pyc
+.env
