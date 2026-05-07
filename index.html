@@ -107,7 +107,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 .meta-chip span{color:var(--text);font-weight:700;}
 
 /* CHARTS */
-.charts-wrapper{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:28px;}
+.charts-wrapper{display:grid;grid-template-columns:1fr;gap:22px;margin-bottom:28px;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;position:relative;overflow:hidden;animation:fadeUp 0.7s 0.25s ease both;box-shadow:var(--card-glow);}
 .chart-card::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);opacity:0.5;}
 .chart-card-title{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:26px;font-family:'Space Mono',monospace;}
@@ -129,12 +129,6 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 .legend-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
 .legend-pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);width:36px;text-align:right;}
 
-/* PIE */
-.pie-layout{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
-.pie-wrap{position:relative;width:190px;height:190px;flex-shrink:0;}
-.pie-wrap svg{overflow:visible;filter:drop-shadow(0 4px 18px rgba(0,0,0,0.4));}
-.pie-slice{transition:transform 0.2s ease,opacity 0.2s;cursor:pointer;}
-.pie-slice:hover{filter:brightness(1.18);}
 
 /* LINE GRAPH */
 .line-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:32px;box-shadow:var(--card-glow);animation:fadeUp 0.7s 0.3s ease both;}
@@ -212,7 +206,6 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 .vp-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
 .vp-tag{font-size:10px;font-family:'Space Mono',monospace;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:3px;padding:2px 8px;color:var(--muted);}
 .vp-tag strong{color:var(--text);}
-.screenshot-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Space Mono',monospace;color:var(--accent2);background:rgba(124,77,255,0.1);border:1px solid rgba(124,77,255,0.3);padding:4px 10px;border-radius:4px;margin-top:4px;}
 
 /* INLINE IMAGES */
 .msg-item.has-image{padding-bottom:12px;}
@@ -269,7 +262,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 @keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
-@keyframes pieIn{from{opacity:0;transform:scale(0.55) rotate(-20deg)}to{opacity:0.92;transform:scale(1) rotate(0deg)}}
+
 
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -277,7 +270,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
 
 @media(max-width:900px){.charts-wrapper{grid-template-columns:1fr;}}
-@media(max-width:600px){.summary-grid{grid-template-columns:repeat(2,1fr);}.meta-bar{flex-direction:column;}.donut-layout,.pie-layout{flex-direction:column;}}
+@media(max-width:600px){.summary-grid{grid-template-columns:repeat(2,1fr);}.meta-bar{flex-direction:column;}.donut-layout{flex-direction:column;}}
 </style>
 </head>
 <body>
@@ -307,93 +300,20 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 <script>
 const JSON_FILE = 'results.json';
 
-/* ══ DEMO DATA ══ */
+/* ══ DEMO DATA (fallback) ══ */
 const DEMO = {
   version:{ major:6, minor:7 },
   tests:[{
-    type:'testsuite', name:'suite_CMSearch',
+    type:'testsuite', name:'suite_Demo',
     start: new Date(Date.now()-3600000).toISOString(),
     stop:  new Date(Date.now()-2000000).toISOString(),
     tests:[
-      { type:'testcase', name:'tst_CMSearch_Login',
+      { type:'testcase', name:'tst_Demo_Login',
         start: new Date(Date.now()-3590000).toISOString(), stop: new Date(Date.now()-3400000).toISOString(),
         tests:[
           { type:'msg', result:'PASS', text:'Navigated to login page', time: new Date(Date.now()-3580000).toISOString() },
           { type:'msg', result:'PASS', text:'Credentials entered', time: new Date(Date.now()-3560000).toISOString() },
-          { type:'msg', result:'PASS', text:'Screenshot: c:\\report\\suite_CMSearch\\tst_CMSearch\\passedImages\\passed_1.png', time: new Date(Date.now()-3550000).toISOString() },
-          { type:'propertyVerificationResult', result:'PASS', text:'Verify title', objectName:'lblTitle', expectedValue:'CM Search', actualValue:'CM Search', time: new Date(Date.now()-3530000).toISOString() }
-        ]
-      },
-      { type:'testcase', name:'tst_CMSearch_Search',
-        start: new Date(Date.now()-3390000).toISOString(), stop: new Date(Date.now()-3200000).toISOString(),
-        tests:[
-          { type:'feature', name:'Search Feature', tests:[
-            { type:'scenario', name:'Valid search returns results', tests:[
-              { name:'Given search page is open', tests:[{type:'msg',result:'PASS',text:'Page loaded',time:new Date().toISOString()}] },
-              { name:'When user enters keyword "CM"', tests:[{type:'msg',result:'PASS',text:'Keyword typed',time:new Date().toISOString()}] },
-              { name:'Then results should appear', tests:[{type:'msg',result:'FAIL',text:'Expected 5 results, got 3',time:new Date().toISOString()}] }
-            ]},
-            { type:'scenario', name:'Empty search shows warning', tests:[
-              { name:'Given empty input', tests:[{type:'msg',result:'PASS',text:'Input cleared',time:new Date().toISOString()}] },
-              { name:'Then warning banner shown', tests:[{type:'msg',result:'PASS',text:'Banner visible',time:new Date().toISOString()}] }
-            ]}
-          ]},
-          { type:'msg', result:'FAIL', text:'Diff saved: c:\\report\\suite_CMSearch\\tst_CMSearch\\passedImages\\passed_5.png', time: new Date(Date.now()-3210000).toISOString() }
-        ]
-      },
-      { type:'testcase', name:'tst_CMSearch_Export',
-        start: new Date(Date.now()-3190000).toISOString(), stop: new Date(Date.now()-3100000).toISOString(),
-        tests:[
-          { type:'msg', result:'PASS', text:'Export button clicked', time:new Date().toISOString() },
-          { type:'msg', result:'PASS', text:'File download triggered', time:new Date().toISOString() },
-          { type:'msg', result:'ERROR', text:'Validation error: unexpected null value', time:new Date().toISOString() }
-        ]
-      },
-      { type:'testcase', name:'tst_CMSearch_Filter', isSkipped:true,
-        start: new Date(Date.now()-3090000).toISOString(), stop: new Date(Date.now()-3000000).toISOString(),
-        tests:[]
-      }
-    ]
-  },{
-    type:'testsuite', name:'suite_Dashboard',
-    start: new Date(Date.now()-2900000).toISOString(),
-    stop:  new Date(Date.now()-2000000).toISOString(),
-    tests:[
-      { type:'testcase', name:'tst_Dashboard_Load',
-        start: new Date(Date.now()-2890000).toISOString(), stop: new Date(Date.now()-2800000).toISOString(),
-        tests:[
-          { type:'msg', result:'PASS', text:'Dashboard loaded in 1.2s', time:new Date().toISOString() },
-          { type:'msg', result:'PASS', text:'All widgets rendered', time:new Date().toISOString() },
-          { type:'propertyVerificationResult', result:'PASS', text:'Verify widget count', objectName:'widgetContainer', expectedValue:'6', actualValue:'6', time:new Date().toISOString() }
-        ]
-      },
-      { type:'testcase', name:'tst_Dashboard_Charts',
-        start: new Date(Date.now()-2790000).toISOString(), stop: new Date(Date.now()-2700000).toISOString(),
-        tests:[
-          { type:'msg', result:'PASS', text:'Bar chart data correct', time:new Date().toISOString() },
-          { type:'msg', result:'FAIL', text:'Pie chart missing legend label', time:new Date().toISOString() }
-        ]
-      }
-    ]
-  },{
-    type:'testsuite', name:'suite_API',
-    start: new Date(Date.now()-1900000).toISOString(),
-    stop:  new Date(Date.now()-1000000).toISOString(),
-    tests:[
-      { type:'testcase', name:'tst_API_Users',
-        start: new Date(Date.now()-1890000).toISOString(), stop: new Date(Date.now()-1800000).toISOString(),
-        tests:[
-          { type:'msg', result:'PASS', text:'GET /users → 200', time:new Date().toISOString() },
-          { type:'msg', result:'PASS', text:'POST /users creates record', time:new Date().toISOString() },
-          { type:'msg', result:'PASS', text:'DELETE /users removes record', time:new Date().toISOString() }
-        ]
-      },
-      { type:'testcase', name:'tst_API_Auth',
-        start: new Date(Date.now()-1790000).toISOString(), stop: new Date(Date.now()-1700000).toISOString(),
-        tests:[
-          { type:'msg', result:'PASS', text:'Auth header validated', time:new Date().toISOString() },
-          { type:'msg', result:'PASS', text:'Rate-limit 429 after 100 req', time:new Date().toISOString() },
-          { type:'msg', result:'FAIL', text:'PATCH /users/profile missing validation', time:new Date().toISOString() }
+          { type:'scriptedVerificationResult', result:'PASS', text:'Login successful (Screenshot in "c:\\report\\passed_1.png")', screenshotUrl:'x-results:suite_Demo/tst_Demo/passedImages/passed_1.png', time: new Date(Date.now()-3530000).toISOString() }
         ]
       }
     ]
@@ -406,35 +326,58 @@ function fmtDate(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateS
 function duration(a,b){ if(!a||!b) return ''; const ms=new Date(b)-new Date(a); return ms<1000?ms+'ms':(ms/1000).toFixed(2)+'s'; }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-/* ══ ANALYSIS ══ */
-function analyzeTests(tests){
-  const s={pass:0,fail:0,skip:0,error:0,log:0,total:0};
+/* ══ LEAF NODE DETECTION ══
+ * Squish BDD JSON uses many container types. A "leaf" is any node that
+ * carries an actual test result: msg, scriptedVerificationResult, propertyVerificationResult.
+ */
+const LEAF_TYPES = new Set(['msg','scriptedVerificationResult','propertyVerificationResult','screenshot']);
+
+/* Collect all leaf result nodes from any depth of nesting */
+function collectLeaves(nodes){
+  const leaves=[];
   function walk(arr){
-    if(!arr) return;
-    for(const t of arr){
-      if(t.type==='msg'){
-        s.total++;
-        if(t.result==='PASS') s.pass++;
-        else if(t.result==='FAIL') s.fail++;
-        else if(t.result==='ERROR') s.error++;
-        else s.log++;
-      } else if(t.type==='propertyVerificationResult'){
-        s.total++;
-        if(t.result==='PASS') s.pass++; else s.fail++;
-      } else if(t.isSkipped){ s.skip++; s.total++; }
-      if(t.tests) walk(t.tests);
+    if(!Array.isArray(arr)) return;
+    for(const n of arr){
+      if(LEAF_TYPES.has(n.type)) leaves.push(n);
+      if(n.tests) walk(n.tests);
     }
   }
-  walk(tests);
+  walk(nodes);
+  return leaves;
+}
+
+/* ══ ANALYSIS — works on deeply nested Squish BDD structures ══ */
+function analyzeTests(tests){
+  const s={pass:0,fail:0,skip:0,error:0,log:0,total:0};
+  const leaves=collectLeaves(tests);
+  for(const t of leaves){
+    const r=(t.result||'').toUpperCase();
+    if(r==='PASS'){ s.pass++; s.total++; }
+    else if(r==='FAIL'){ s.fail++; s.total++; }
+    else if(r==='ERROR'){ s.error++; s.total++; }
+    else if(r==='LOG'){ s.log++; s.total++; }
+    else { s.log++; s.total++; }
+  }
+  // Also count explicitly skipped testcases
+  function countSkipped(arr){
+    if(!Array.isArray(arr)) return;
+    for(const n of arr){
+      if(n.isSkipped){ s.skip++; s.total++; }
+      if(n.tests) countSkipped(n.tests);
+    }
+  }
+  countSkipped(tests);
   return s;
 }
 
 function tcStatus(tests){
   const s=analyzeTests(tests);
-  if(s.error>0||s.fail>0) return 'fail';
-  if(s.skip>0&&s.pass===0) return 'skip';
+  if(s.error>0) return 'fail';
+  if(s.fail>0) return 'fail';
+  if(s.skip>0&&s.pass===0&&s.fail===0) return 'skip';
   if(s.pass>0) return 'pass';
-  return 'log';
+  if(s.log>0) return 'log';
+  return 'skip';
 }
 
 /* ══ TOOLTIP ══ */
@@ -481,109 +424,164 @@ function badge(status){
   return `<span class="badge badge-${status}">${labels[status]||status.toUpperCase()}</span>`;
 }
 
-/* ══ IMAGE PATH DETECTION ══ */
+/* ══ IMAGE PATH / SCREENSHOT DETECTION ══
+ * Squish puts paths in two places:
+ *   1) node.screenshotUrl  e.g. "x-results:suite_CMSearch/tst_CMSearch/passedImages/passed_1.png"
+ *   2) inline in node.text  e.g. '(Screenshot in "c:\report\...\passed_1.png")'
+ */
 const IMG_RE=/([a-zA-Z]:[\\\/][^\s,;|"'<>]+\.(?:png|jpg|jpeg|gif|bmp|webp)|(?:\.{0,2}[\\\/])[^\s,;|"'<>]+\.(?:png|jpg|jpeg|gif|bmp|webp))/gi;
 
-function buildImgHtml(raw){
-  const paths=[...raw.matchAll(IMG_RE)].map(m=>m[1]);
-  if(!paths.length) return '';
-  return paths.map(p=>{
+function resolveScreenshotSrc(node){
+  // Prefer screenshotUrl if present (x-results: scheme → relative path)
+  if(node.screenshotUrl){
+    const url=node.screenshotUrl;
+    if(url.startsWith('x-results:')){
+      // x-results:suite_CMSearch/tst_CMSearch/passedImages/passed_1.png
+      // Resolve relative to results.json location (same folder as index.html)
+      return url.replace(/^x-results:/,'');
+    }
+    return url;
+  }
+  return null;
+}
+
+function buildImgHtml(raw, node){
+  const imgs=[];
+
+  // 1. screenshotUrl from the node itself
+  const ss=resolveScreenshotSrc(node||{});
+  if(ss) imgs.push({src:ss, label:ss});
+
+  // 2. Windows/relative paths embedded in text
+  const found=[...raw.matchAll(IMG_RE)].map(m=>m[1]);
+  for(const p of found){
     const norm=p.replace(/\\/g,'/');
     const src=/^[a-zA-Z]:\//.test(norm)?'file:///'+norm:norm;
-    return `<div class="inline-img-wrap">
-      <div class="inline-img-path">📁 ${esc(p)}</div>
-      <img class="inline-img" src="${src}" alt="${esc(p)}" loading="lazy"
-        onclick="openLightbox(this.src,'${esc(p).replace(/'/g,'&#39;')}')"
-        onerror="this.closest('.inline-img-wrap').classList.add('img-broken');this.style.display='none';this.nextElementSibling.style.display='flex';"/>
-      <div class="img-broken-msg" style="display:none">
-        <span>⚠ Image not found</span>
-        <a href="${src}" target="_blank" class="img-open-link">Open path ↗</a>
+    imgs.push({src,label:p});
+  }
+
+  if(!imgs.length) return '';
+  return imgs.map(({src,label})=>`<div class="inline-img-wrap">
+    <div class="inline-img-path">📁 ${esc(label)}</div>
+    <img class="inline-img" src="${src}" alt="${esc(label)}" loading="lazy"
+      onclick="openLightbox(this.src,'${esc(label).replace(/'/g,'&#39;')}')"
+      onerror="this.closest('.inline-img-wrap').classList.add('img-broken');this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+    <div class="img-broken-msg" style="display:none">
+      <span>⚠ Image not found</span>
+      <a href="${src}" target="_blank" class="img-open-link">Open path ↗</a>
+    </div>
+  </div>`).join('');
+}
+
+/* ══ RENDER A SINGLE LEAF MESSAGE ══ */
+function renderLeaf(t){
+  // Determine display class from result
+  const r=(t.result||'').toUpperCase();
+  let cls='log', icon='›';
+  if(r==='PASS'){cls='pass';icon='✓';}
+  else if(r==='FAIL'){cls='fail';icon='✗';}
+  else if(r==='ERROR'){cls='error';icon='✗';}
+  else if(r==='LOG'){cls='log';icon='›';}
+
+  const raw=t.text||'';
+  const imgHtml=buildImgHtml(raw,t);
+
+  if(t.type==='propertyVerificationResult'){
+    return `<li class="msg-item ${cls}">
+      <span class="msg-icon">${icon}</span>
+      <div class="msg-content">
+        <div class="msg-text">${esc(raw)}</div>
+        <div class="vp-row">
+          <span class="vp-tag">Object: <strong>${esc(t.objectName||'')}</strong></span>
+          <span class="vp-tag">Expected: <strong>${esc(t.expectedValue||'')}</strong></span>
+          <span class="vp-tag">Actual: <strong>${esc(t.actualValue||'')}</strong></span>
+        </div>
       </div>
-    </div>`;
-  }).join('');
-}
-
-/* ══ RENDER MESSAGES ══ */
-function renderMessages(tests){
-  if(!tests||!tests.length) return '';
-  let items='';
-  for(const t of tests){
-    if(t.type==='msg'){
-      const cls=t.result?t.result.toLowerCase():'log';
-      const icon=t.result==='PASS'?'✓':t.result==='FAIL'||t.result==='ERROR'?'✗':t.result==='LOG'?'›':'·';
-      const raw=t.text||'';
-      const imgHtml=buildImgHtml(raw);
-      items+=`<li class="msg-item ${cls}${imgHtml?' has-image':''}">
-        <span class="msg-icon">${icon}</span>
-        <div class="msg-content">
-          ${imgHtml?`<div class="msg-text-row">${esc(raw)}</div>`:`<div class="msg-text">${esc(raw)}</div>`}
-          ${t.detail?`<div class="msg-detail">${esc(t.detail)}</div>`:''}
-          ${imgHtml}
-        </div>
-        <span class="msg-time">${fmtTime(t.time)}</span>
-      </li>`;
-    } else if(t.type==='propertyVerificationResult'){
-      const cls=t.result==='PASS'?'pass':'fail';
-      items+=`<li class="msg-item ${cls}">
-        <span class="msg-icon">${t.result==='PASS'?'✓':'✗'}</span>
-        <div class="msg-content">
-          <div class="msg-text">${esc(t.text||'')}</div>
-          <div class="vp-row">
-            <span class="vp-tag">Object: <strong>${esc(t.objectName||'')}</strong></span>
-            <span class="vp-tag">Expected: <strong>${esc(t.expectedValue||'')}</strong></span>
-            <span class="vp-tag">Actual: <strong>${esc(t.actualValue||'')}</strong></span>
-          </div>
-        </div>
-        <span class="msg-time">${fmtTime(t.time)}</span>
-      </li>`;
-    } else if(t.type==='screenshot'){
-      const fname=(t.uri||'').split('/').pop();
-      items+=`<li class="msg-item screenshot">
-        <span class="msg-icon">📸</span>
-        <div class="msg-content">
-          <div class="msg-text">Screenshot captured</div>
-          <div class="screenshot-badge">🖼 ${esc(fname)}</div>
-        </div>
-        <span class="msg-time">${fmtTime(t.time)}</span>
-      </li>`;
-    }
+      <span class="msg-time">${fmtTime(t.time)}</span>
+    </li>`;
   }
-  return items?`<ul class="msg-list">${items}</ul>`:'';
+
+  return `<li class="msg-item ${cls}${imgHtml?' has-image':''}">
+    <span class="msg-icon">${icon}</span>
+    <div class="msg-content">
+      ${imgHtml?`<div class="msg-text-row">${esc(raw)}</div>`:`<div class="msg-text">${esc(raw)}</div>`}
+      ${t.detail?`<div class="msg-detail">${esc(t.detail)}</div>`:''}
+      ${imgHtml}
+    </div>
+    <span class="msg-time">${fmtTime(t.time)}</span>
+  </li>`;
 }
 
-/* ══ STEPS ══ */
+/* ══ RENDER STEP (type:'step') — renders its name + its leaf children ══ */
 function renderStep(step){
-  let cls='step-skip',dot='var(--skip)',icon='○';
-  if(!step.isSkipped){
-    const msgs=step.tests||[];
-    const hasErr=msgs.some(m=>m.result==='ERROR'||m.result==='FAIL');
-    const hasPass=msgs.some(m=>m.result==='PASS');
-    if(hasErr){cls='step-fail';dot='var(--fail)';icon='✗';}
-    else if(hasPass){cls='step-pass';dot='var(--pass)';icon='✓';}
-    else if(msgs.length){icon='›';}
-  }
-  let errMsgs='';
-  (step.tests||[]).forEach(m=>{
-    if(m.result==='ERROR'||m.result==='FAIL')
-      errMsgs+=`<div class="step-error-msg">⚠ ${esc(m.text||'')}${m.detail?' — '+esc(m.detail):''}</div>`;
-  });
-  return `<div class="step-item ${cls}"><span class="step-dot" style="background:${dot}"></span><span>${icon} ${esc(step.name||'')}</span></div>${errMsgs}`;
+  const leaves=collectLeaves(step.tests||[]);
+  const hasErr=leaves.some(m=>m.result==='ERROR'||m.result==='FAIL');
+  const hasPass=leaves.some(m=>m.result==='PASS');
+  let cls='',dot='var(--muted)',icon='·';
+  if(step.isSkipped){cls='step-skip';dot='var(--skip)';icon='○';}
+  else if(hasErr){cls='step-fail';dot='var(--fail)';icon='✗';}
+  else if(hasPass){cls='step-pass';dot='var(--pass)';icon='✓';}
+  else if(leaves.length){icon='›';}
+
+  const errMsgs=leaves.filter(m=>m.result==='ERROR'||m.result==='FAIL')
+    .map(m=>`<div class="step-error-msg">⚠ ${esc(m.text||'')}${m.detail?' — '+esc(m.detail):''}</div>`).join('');
+
+  // Render inline screenshot images for this step's pass results
+  const imgItems=leaves.filter(m=>(m.result==='PASS'||m.result==='LOG')&&(m.screenshotUrl||IMG_RE.test(m.text||'')));
+  const imgs=imgItems.map(m=>{
+    IMG_RE.lastIndex=0;
+    return buildImgHtml(m.text||'',m);
+  }).filter(Boolean).join('');
+
+  return `<div class="step-item ${cls}">
+    <span class="step-dot" style="background:${dot}"></span>
+    <span>${icon} ${esc(step.name||'')}</span>
+  </div>${errMsgs}${imgs?`<div style="padding:4px 22px">${imgs}</div>`:''}`;
 }
 
+/* ══ RENDER SCENARIO / ROW ══ */
 function renderScenario(sc){
-  const steps=(sc.tests||[]).map(renderStep).join('');
-  const hasErr=(sc.tests||[]).some(s=>(s.tests||[]).some(m=>m.result==='ERROR'||m.result==='FAIL'));
+  // A scenario or row may contain step nodes or leaf nodes directly
+  const steps=(sc.tests||[]).filter(t=>t.type==='step');
+  const directLeaves=(sc.tests||[]).filter(t=>LEAF_TYPES.has(t.type));
+  const hasErr=collectLeaves(sc.tests||[]).some(m=>m.result==='ERROR'||m.result==='FAIL');
+  const dotColor=hasErr?'var(--fail)':'var(--pass)';
+  const label=sc.name||sc.type||'Scenario';
+  const stepHtml=steps.map(renderStep).join('');
+  const leafHtml=directLeaves.length?`<ul class="msg-list">${directLeaves.map(renderLeaf).join('')}</ul>`:'';
   return `<div class="scenario-block">
-    <div class="scenario-name"><span style="width:8px;height:8px;border-radius:50%;background:${hasErr?'var(--fail)':'var(--pass)'};flex-shrink:0;display:inline-block"></span>${esc(sc.name||'Scenario')}</div>
-    ${steps}
+    <div class="scenario-name">
+      <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;display:inline-block"></span>
+      ${esc(label)}
+    </div>
+    ${stepHtml}${leafHtml}
   </div>`;
 }
 
+/* ══ RENDER SCENARIOOUTLINE (contains rows) ══ */
+function renderScenarioOutline(outline){
+  // Each row is like a scenario
+  const rows=(outline.tests||[]).filter(t=>t.type==='row');
+  if(rows.length) return rows.map(renderScenario).join('');
+  // Fallback: treat as plain scenario
+  return renderScenario(outline);
+}
+
+/* ══ RENDER FEATURE ══ */
 function renderFeature(feat){
-  const scenarios=(feat.tests||[]).filter(t=>t.type==='scenario').map(renderScenario).join('');
+  let inner='';
+  for(const child of (feat.tests||[])){
+    if(child.type==='scenariooutline') inner+=renderScenarioOutline(child);
+    else if(child.type==='scenario') inner+=renderScenario(child);
+    else if(child.type==='row') inner+=renderScenario(child);
+    else if(child.type==='step') inner+=renderStep(child);
+    else if(LEAF_TYPES.has(child.type)){
+      inner+=`<ul class="msg-list">${renderLeaf(child)}</ul>`;
+    }
+  }
   return `<div class="feature-block">
     <div class="feature-header">◈ Feature — ${esc(feat.name||'')}</div>
-    ${scenarios}
+    ${inner}
   </div>`;
 }
 
@@ -594,12 +592,21 @@ function renderTestCase(tc){
   const id='tc-'+tcCounter;
   const status=tcStatus(tc.tests||[]);
   const dur=duration(tc.start,tc.stop);
-  const sErr=analyzeTests(tc.tests||[]).error;
+  const st=analyzeTests(tc.tests||[]);
+  const bStatus=st.error>0?'error':(st.fail>0?'fail':status);
+
+  // Build body: features first, then top-level leaf messages
   let body='';
-  (tc.tests||[]).forEach(child=>{ if(child.type==='feature') body+=renderFeature(child); });
-  const leafMsgs=(tc.tests||[]).filter(t=>t.type==='msg'||t.type==='propertyVerificationResult'||t.type==='screenshot');
-  if(leafMsgs.length) body+=renderMessages(leafMsgs);
-  const bStatus=status==='fail'?(sErr>0?'error':'fail'):status;
+  for(const child of (tc.tests||[])){
+    if(child.type==='feature') body+=renderFeature(child);
+    else if(child.type==='scenariooutline') body+=renderScenarioOutline(child);
+    else if(child.type==='scenario') body+=renderScenario(child);
+    else if(child.type==='step') body+=renderStep(child);
+    else if(LEAF_TYPES.has(child.type)){
+      body+=`<ul class="msg-list">${renderLeaf(child)}</ul>`;
+    }
+  }
+
   return `<div class="testcase">
     <div class="testcase-header" onclick="toggleCollapse('${id}')">
       <span class="tc-status status-${status}"></span>
@@ -635,6 +642,7 @@ function renderSuite(suite){
         ${st.fail?`<span class="badge badge-fail">${st.fail} FAIL</span>`:''}
         ${st.error?`<span class="badge badge-error">${st.error} ERR</span>`:''}
         ${st.skip?`<span class="badge badge-skip">${st.skip} SKIP</span>`:''}
+        ${st.log?`<span class="badge badge-log">${st.log} LOG</span>`:''}
       </div>
       <span class="chevron" id="chev-${id}">▼</span>
     </div>
@@ -699,59 +707,14 @@ function animateDonut(pass,fail,skip,error,total){
   });
 }
 
-/* ══ PIE CHART ══ */
-function buildPie(pass,fail,skip,error,total){
-  if(!total) return '';
-  const cx=95,cy=95,r=88;
-  const slices=[
-    {val:pass,color:'#00e676',label:'Pass'},
-    {val:fail,color:'#ff1744',label:'Fail'},
-    {val:error,color:'#ff5252',label:'Error'},
-    {val:skip,color:'#ffd740',label:'Skip'}
-  ].filter(s=>s.val>0);
-  function p2xy(angle,rad){ return {x:cx+rad*Math.cos((angle-90)*Math.PI/180),y:cy+rad*Math.sin((angle-90)*Math.PI/180)}; }
-  const glowDefs=slices.map((_,i)=>`<filter id="pg${i}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`).join('');
-  let paths='',angle=0;
-  slices.forEach((s,i)=>{
-    const sa=angle,ea=angle+(s.val/total)*360;
-    const sp=p2xy(sa,r),ep=p2xy(ea,r);
-    const large=(ea-sa)>180?1:0;
-    const path=(ea-sa)>=360?`M ${cx} ${cy-r} A ${r} ${r} 0 1 1 ${cx-0.01} ${cy-r} Z`:`M ${cx} ${cy} L ${sp.x} ${sp.y} A ${r} ${r} 0 ${large} 1 ${ep.x} ${ep.y} Z`;
-    const mid=sa+(ea-sa)/2;
-    const lx=cx+(r*0.64)*Math.cos((mid-90)*Math.PI/180);
-    const ly=cy+(r*0.64)*Math.sin((mid-90)*Math.PI/180);
-    const pct=Math.round(s.val/total*100);
-    paths+=`<path class="pie-slice" d="${path}" fill="${s.color}" opacity="0.9" data-label="${s.label}: ${s.val} (${pct}%)" filter="url(#pg${i})" style="animation:pieIn 0.8s cubic-bezier(0.34,1.56,0.64,1) ${i*0.1}s both;transform-origin:${cx}px ${cy}px;"/>`;
-    if(pct>=8) paths+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="10" font-weight="700" fill="${s.val===pass?'#0a0d14':'#fff'}" pointer-events="none">${pct}%</text>`;
-    angle+=(s.val/total)*360;
-  });
-  paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>`;
-  const legend=slices.map(s=>`<div class="legend-row">
-    <div class="legend-swatch" style="background:${s.color};border-radius:50%"></div>
-    <div class="legend-name">${s.label}</div>
-    <div class="legend-val" style="color:${s.color}">${s.val}</div>
-    <div class="legend-pct">${Math.round(s.val/total*100)}%</div>
-  </div>`).join('');
-  return `<div class="pie-layout">
-    <div class="pie-wrap">
-      <svg width="190" height="190" viewBox="0 0 190 190" id="pie-svg">
-        <defs>${glowDefs}</defs>${paths}
-      </svg>
-    </div>
-    <div class="chart-legend">${legend}</div>
-  </div>`;
-}
-
 /* ══ LINE GRAPH ══ */
 function buildLineGraph(suites){
   if(!suites||suites.length<2) return '';
   const W=740,H=210,PL=46,PR=22,PT=20,PB=42;
   const iW=W-PL-PR,iH=H-PT-PB;
   const points=suites.map(s=>{
-    const tcs=(s.tests||[]).filter(t=>t.type==='testcase');
-    let p=0,f=0,sk=0;
-    tcs.forEach(tc=>{const st=analyzeTests(tc.tests||[]);p+=st.pass;f+=st.fail+st.error;sk+=st.skip;});
-    return {name:s.name||'Suite',pass:p,fail:f,skip:sk,total:p+f+sk};
+    const st=analyzeTests(s.tests||[]);
+    return {name:s.name||'Suite',pass:st.pass,fail:st.fail+st.error,skip:st.skip,total:st.pass+st.fail+st.error+st.skip};
   });
   const maxVal=Math.max(...points.map(p=>Math.max(p.pass,p.fail,p.skip)),1);
   const n=points.length;
@@ -771,23 +734,21 @@ function buildLineGraph(suites){
     return `<text class="lc-axis" x="${px(i)}" y="${H-PB+16}" text-anchor="middle">${esc(short)}</text>`;
   }).join('');
 
-  function makeLine(key,cls,color){
+  function makeLine(key,cls){
     if(n===1){
-      return `<circle class="lc-dot lc-dot-${cls}" cx="${px(0)}" cy="${py(points[0][key])}" r="5">
-        <title>${points[0].name} — ${key}: ${points[0][key]}</title></circle>`;
+      return `<circle class="lc-dot lc-dot-${cls}" cx="${px(0)}" cy="${py(points[0][key])}" r="5"/>`;
     }
     const ptStr=points.map((p,i)=>`${px(i)},${py(p[key])}`).join(' ');
     const areaStr=`${px(0)},${py(0)} `+points.map((p,i)=>`${px(i)},${py(p[key])}`).join(' ')+` ${px(n-1)},${py(0)}`;
     const fillCol=cls==='pass'?'rgba(0,230,118,0.07)':cls==='fail'?'rgba(255,23,68,0.07)':'rgba(255,215,64,0.05)';
     const dots=points.map((p,i)=>`<circle class="lc-dot lc-dot-${cls}" cx="${px(i)}" cy="${py(p[key])}" r="4"
-        onmouseenter="showTT(event,'${esc(p.name)}: ${p[key]} ${key}')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
-      <title>${p.name} — ${key}: ${p[key]}</title></circle>`).join('');
+        onmouseenter="showTT(event,'${esc(p.name)}: ${p[key]} ${key}')" onmousemove="moveTT(event)" onmouseleave="hideTT()"/>`).join('');
     return `<polygon points="${areaStr}" fill="${fillCol}" stroke="none"/>
             <polyline class="lc-line lc-line-${cls}" points="${ptStr}" stroke-dasharray="9999" stroke-dashoffset="9999" id="ll-${cls}"/>
             ${dots}`;
   }
 
-  const allLines=makeLine('pass','pass','var(--pass)')+makeLine('fail','fail','var(--fail)')+makeLine('skip','skip','var(--skip)');
+  const allLines=makeLine('pass','pass')+makeLine('fail','fail')+makeLine('skip','skip');
   return `<div class="line-card">
     <div class="line-card-title">◎ Suite-by-Suite Line Graph</div>
     <div class="line-chart-wrap">
@@ -824,10 +785,16 @@ function renderReport(data){
   const suites=(data.tests||[]).filter(t=>t.type==='testsuite');
   const allTCs=[];
   suites.forEach(s=>(s.tests||[]).forEach(t=>t.type==='testcase'&&allTCs.push(t)));
-  let totalPass=0,totalFail=0,totalSkip=0,totalError=0;
-  allTCs.forEach(tc=>{const s=analyzeTests(tc.tests||[]);totalPass+=s.pass;totalFail+=s.fail;totalSkip+=s.skip;totalError+=s.error;});
-  const totalEvents=totalPass+totalFail+totalSkip+totalError;
+
+  // Aggregate counts across all leaves in all suites
+  let totalPass=0,totalFail=0,totalSkip=0,totalError=0,totalLog=0;
+  suites.forEach(s=>{
+    const st=analyzeTests(s.tests||[]);
+    totalPass+=st.pass; totalFail+=st.fail; totalSkip+=st.skip; totalError+=st.error; totalLog+=st.log;
+  });
+  const totalEvents=totalPass+totalFail+totalSkip+totalError+totalLog;
   const passRate=totalEvents?Math.round(totalPass/totalEvents*100):0;
+
   const startDate=fmtDate(data.tests?.[0]?.start);
   const startTime=fmtTime(data.tests?.[0]?.start);
   const ver=data.version?`v${data.version.major}.${data.version.minor}`:'—';
@@ -838,7 +805,7 @@ function renderReport(data){
     <div class="stat-card total"><div class="stat-num" id="cnt-total">0</div><div class="stat-label">Total Events</div><div class="stat-bar" id="bar-total"></div></div>
     <div class="stat-card passed"><div class="stat-num" id="cnt-pass">0</div><div class="stat-label">Passed</div><div class="stat-bar" id="bar-pass"></div></div>
     <div class="stat-card failed"><div class="stat-num" id="cnt-fail">0</div><div class="stat-label">Failed</div><div class="stat-bar" id="bar-fail"></div></div>
-    <div class="stat-card skipped"><div class="stat-num" id="cnt-skip">0</div><div class="stat-label">Skipped</div><div class="stat-bar" id="bar-skip"></div></div>
+    <div class="stat-card skipped"><div class="stat-num" id="cnt-skip">0</div><div class="stat-label">Skipped / Log</div><div class="stat-bar" id="bar-skip"></div></div>
     <div class="stat-card errors"><div class="stat-num" id="cnt-error">0</div><div class="stat-label">Errors</div><div class="stat-bar" id="bar-error"></div></div>
   </div>
 
@@ -865,11 +832,7 @@ function renderReport(data){
   <div class="charts-wrapper">
     <div class="chart-card">
       <div class="chart-card-title">◎ Donut — Result Breakdown</div>
-      ${buildDonut(totalPass,totalFail,totalSkip,totalError,totalEvents,passRate)}
-    </div>
-    <div class="chart-card">
-      <div class="chart-card-title">◉ Pie — Distribution</div>
-      ${buildPie(totalPass,totalFail,totalSkip,totalError,totalEvents)}
+      ${buildDonut(totalPass,totalFail,totalSkip+totalLog,totalError,totalEvents,passRate)}
     </div>
   </div>
 
@@ -888,11 +851,11 @@ function renderReport(data){
     animateCount(document.getElementById('cnt-total'),totalEvents,100);
     animateCount(document.getElementById('cnt-pass'),totalPass,200);
     animateCount(document.getElementById('cnt-fail'),totalFail,300);
-    animateCount(document.getElementById('cnt-skip'),totalSkip,400);
+    animateCount(document.getElementById('cnt-skip'),totalSkip+totalLog,400);
     animateCount(document.getElementById('cnt-error'),totalError,500);
 
     if(totalEvents){
-      const vals={pass:totalPass,fail:totalFail,skip:totalSkip,error:totalError,total:totalEvents};
+      const vals={pass:totalPass,fail:totalFail,skip:totalSkip+totalLog,error:totalError,total:totalEvents};
       ['pass','fail','skip','error','total'].forEach(k=>{
         const b=document.getElementById('bar-'+k);
         if(b) b.style.width=(vals[k]/totalEvents*100)+'%';
@@ -900,19 +863,12 @@ function renderReport(data){
       setTimeout(()=>{
         document.getElementById('prog-pass').style.width=(totalPass/totalEvents*100)+'%';
         document.getElementById('prog-fail').style.width=(totalFail/totalEvents*100)+'%';
-        document.getElementById('prog-skip').style.width=(totalSkip/totalEvents*100)+'%';
+        document.getElementById('prog-skip').style.width=((totalSkip+totalLog)/totalEvents*100)+'%';
       },200);
     }
 
-    animateDonut(totalPass,totalFail,totalSkip,totalError,totalEvents);
+    animateDonut(totalPass,totalFail,totalSkip+totalLog,totalError,totalEvents);
     animateLineGraph();
-
-    const pieSVG=document.getElementById('pie-svg');
-    if(pieSVG) pieSVG.querySelectorAll('.pie-slice').forEach(el=>{
-      el.addEventListener('mouseenter',e=>showTT(e,el.dataset.label));
-      el.addEventListener('mousemove',moveTT);
-      el.addEventListener('mouseleave',hideTT);
-    });
   },80));
 }
 
