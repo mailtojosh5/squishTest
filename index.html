@@ -3,31 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Squish Test Report</title>
+
+<title>Squish Automation Report</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+
 :root{
   --bg:#0a0d14;
   --surface:#111622;
   --surface2:#161d2e;
   --border:#1e2a3f;
+
   --accent:#00e5ff;
   --accent2:#7c4dff;
+
   --pass:#00e676;
   --fail:#ff1744;
   --skip:#ffd740;
   --error:#ff5252;
   --log:#40c4ff;
+
   --text:#e2e8f0;
-  --muted:#7c8aa5;
+  --muted:#546e8a;
 }
 
 *{
-  box-sizing:border-box;
   margin:0;
   padding:0;
+  box-sizing:border-box;
 }
 
 body{
@@ -35,12 +40,27 @@ body{
   color:var(--text);
   font-family:'Syne',sans-serif;
   min-height:100vh;
+  overflow-x:hidden;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+
+  background-size:40px 40px;
+
+  pointer-events:none;
 }
 
 .container{
-  width:min(1400px,95%);
+  max-width:1300px;
   margin:auto;
-  padding:40px 0 80px;
+  padding:40px 20px 80px;
 }
 
 header{
@@ -48,105 +68,185 @@ header{
   margin-bottom:40px;
 }
 
+.logo-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  border:1px solid rgba(0,229,255,0.3);
+
+  padding:8px 16px;
+
+  color:var(--accent);
+
+  font-size:11px;
+
+  border-radius:4px;
+
+  font-family:'Space Mono',monospace;
+
+  letter-spacing:3px;
+
+  margin-bottom:25px;
+}
+
+.logo-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--accent);
+}
+
 h1{
-  font-size:3rem;
-  margin-bottom:10px;
-  background:linear-gradient(135deg,#fff,var(--accent),var(--accent2));
+  font-size:clamp(2rem,5vw,4rem);
+  font-weight:800;
+
+  background:linear-gradient(
+    135deg,
+    #ffffff,
+    var(--accent),
+    var(--accent2)
+  );
+
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+
+  margin-bottom:12px;
 }
 
 .subtitle{
+  font-size:12px;
   color:var(--muted);
   font-family:'Space Mono',monospace;
-  font-size:12px;
 }
 
 .summary-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:16px;
+  gap:18px;
   margin-bottom:30px;
 }
 
 .stat-card{
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:12px;
+
   padding:24px;
+
   text-align:center;
 }
 
 .stat-num{
-  font-size:2.8rem;
+  font-size:3rem;
   font-weight:800;
   font-family:'Space Mono',monospace;
 }
 
 .stat-label{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:6px;
+  font-size:11px;
   text-transform:uppercase;
   letter-spacing:2px;
+  color:var(--muted);
+  margin-top:6px;
 }
 
 .total .stat-num{color:var(--accent);}
-.passed .stat-num{color:var(--pass);}
-.failed .stat-num{color:var(--fail);}
-.skipped .stat-num{color:var(--skip);}
-.errors .stat-num{color:var(--error);}
+.pass .stat-num{color:var(--pass);}
+.fail .stat-num{color:var(--fail);}
+.skip .stat-num{color:var(--skip);}
+.error .stat-num{color:var(--error);}
 
-.progress-section{
+.chart-section{
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:10px;
-  padding:24px;
+  border-radius:12px;
+  padding:30px;
   margin-bottom:30px;
-}
 
-.progress-label{
   display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
+  align-items:center;
+  gap:40px;
+  flex-wrap:wrap;
 }
 
-.progress-title{
+.chart-title{
+  width:100%;
   font-size:12px;
-  color:var(--muted);
-  letter-spacing:2px;
-  text-transform:uppercase;
-}
-
-.progress-pct{
-  color:var(--pass);
-  font-family:'Space Mono',monospace;
-  font-size:22px;
-}
-
-.progress-bar{
-  display:flex;
-  overflow:hidden;
-  height:10px;
-  border-radius:8px;
-  background:var(--border);
-}
-
-.progress-fill{
-  height:100%;
-}
-
-.pass{background:var(--pass);}
-.fail{background:var(--fail);}
-.skip{background:var(--skip);}
-.error{background:var(--error);}
-
-.section-title{
-  margin:40px 0 20px;
   color:var(--muted);
   text-transform:uppercase;
   letter-spacing:3px;
-  font-size:12px;
+}
+
+.donut-wrap{
+  position:relative;
+  width:220px;
+  height:220px;
+}
+
+.donut-wrap svg{
+  transform:rotate(-90deg);
+}
+
+.donut-center{
+  position:absolute;
+  inset:0;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+.donut-pct{
+  font-size:2.2rem;
+  font-weight:800;
+  color:var(--pass);
+  font-family:'Space Mono',monospace;
+}
+
+.donut-label{
+  font-size:11px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:2px;
+}
+
+.chart-legend{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  flex:1;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.legend-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+}
+
+.legend-label{
+  font-size:13px;
+}
+
+.legend-value{
+  margin-left:auto;
+  font-family:'Space Mono',monospace;
+  font-weight:700;
+}
+
+.section-title{
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:3px;
+  color:var(--muted);
+  margin-bottom:16px;
 }
 
 .suite-card{
@@ -154,47 +254,44 @@ h1{
   border:1px solid var(--border);
   border-radius:12px;
   overflow:hidden;
-  margin-bottom:24px;
+  margin-bottom:20px;
 }
 
 .suite-header{
-  padding:18px 24px;
   background:var(--surface2);
+  padding:18px 22px;
+
   display:flex;
   align-items:center;
   gap:12px;
+
   cursor:pointer;
 }
 
 .suite-name{
-  font-size:15px;
   font-weight:700;
   font-family:'Space Mono',monospace;
 }
 
-.suite-meta{
-  font-size:11px;
-  color:var(--muted);
-  font-family:'Space Mono',monospace;
-}
-
 .suite-body{
-  padding:24px;
+  padding:18px;
 }
 
 .testcase{
   border:1px solid var(--border);
   border-radius:10px;
   overflow:hidden;
-  margin-bottom:16px;
+  margin-bottom:14px;
 }
 
 .testcase-header{
-  background:var(--surface2);
   padding:14px 18px;
+  background:#161d2e;
+
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
+
   cursor:pointer;
 }
 
@@ -218,94 +315,52 @@ h1{
 
 .tc-name{
   flex:1;
+  font-size:13px;
   font-family:'Space Mono',monospace;
-  font-size:12px;
-  font-weight:700;
 }
 
-.tc-duration{
-  color:var(--muted);
-  font-size:11px;
+.badge{
+  font-size:10px;
+  padding:4px 8px;
+  border-radius:4px;
   font-family:'Space Mono',monospace;
+}
+
+.badge-pass{
+  background:rgba(0,230,118,0.15);
+  color:var(--pass);
+}
+
+.badge-fail{
+  background:rgba(255,23,68,0.15);
+  color:var(--fail);
+}
+
+.badge-skip{
+  background:rgba(255,215,64,0.15);
+  color:var(--skip);
 }
 
 .testcase-body{
   padding:16px;
 }
 
-.feature-block{
-  border:1px solid rgba(124,77,255,0.4);
-  border-radius:10px;
-  margin-bottom:20px;
-  overflow:hidden;
-}
-
-.feature-header{
-  background:rgba(124,77,255,0.15);
-  color:var(--accent2);
-  padding:12px 16px;
-  font-size:12px;
-  font-weight:700;
-  letter-spacing:2px;
-  text-transform:uppercase;
-}
-
-.scenario-block{
-  padding:16px;
-  border-top:1px solid rgba(124,77,255,0.2);
-}
-
-.scenario-name{
-  font-size:14px;
-  margin-bottom:14px;
-  font-weight:700;
-}
-
-.step-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:8px 12px;
-  margin-bottom:8px;
-  border-radius:6px;
-  background:rgba(255,255,255,0.02);
-  font-family:'Space Mono',monospace;
-  font-size:12px;
-}
-
-.step-pass{
-  color:var(--pass);
-}
-
-.step-fail{
-  color:var(--fail);
-}
-
-.step-skip{
-  color:var(--skip);
-}
-
-.step-dot{
-  width:8px;
-  height:8px;
-  border-radius:50%;
-}
-
 .msg-list{
   list-style:none;
-  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
 .msg-item{
-  background:rgba(255,255,255,0.03);
-  border-left:3px solid var(--border);
-  padding:10px 12px;
+  background:#141b2a;
+  border-left:4px solid var(--border);
+
+  padding:12px;
   border-radius:6px;
-  margin-bottom:8px;
-  display:flex;
-  gap:10px;
-  font-family:'Space Mono',monospace;
+
   font-size:12px;
+  font-family:'Space Mono',monospace;
 }
 
 .msg-item.pass{
@@ -316,55 +371,16 @@ h1{
   border-left-color:var(--fail);
 }
 
-.msg-item.error{
-  border-left-color:var(--error);
-}
-
 .msg-item.log{
   border-left-color:var(--log);
 }
 
-.msg-content{
-  flex:1;
+.msg-item.error{
+  border-left-color:var(--error);
 }
 
-.msg-detail{
-  margin-top:5px;
-  color:var(--muted);
-  font-size:11px;
-}
-
-.msg-time{
-  color:var(--muted);
-  font-size:10px;
-}
-
-.badge{
-  padding:3px 8px;
-  border-radius:4px;
-  font-size:10px;
-  font-family:'Space Mono',monospace;
-  font-weight:700;
-}
-
-.badge-pass{
-  background:rgba(0,230,118,.15);
-  color:var(--pass);
-}
-
-.badge-fail{
-  background:rgba(255,23,68,.15);
-  color:var(--fail);
-}
-
-.badge-error{
-  background:rgba(255,82,82,.15);
-  color:var(--error);
-}
-
-.badge-skip{
-  background:rgba(255,215,64,.15);
-  color:var(--skip);
+.msg-text{
+  line-height:1.5;
 }
 
 .collapsible{
@@ -375,79 +391,109 @@ h1{
   display:block;
 }
 
-.screenshot-badge{
-  margin-top:6px;
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:4px;
-  background:rgba(124,77,255,.15);
-  color:var(--accent2);
-  font-size:10px;
-}
-
 #loading{
   text-align:center;
-  padding:80px;
+  padding:120px 40px;
 }
 
 .spinner{
-  width:48px;
-  height:48px;
+  width:50px;
+  height:50px;
   border:4px solid var(--border);
   border-top-color:var(--accent);
+
   border-radius:50%;
-  animation:spin 1s linear infinite;
+
   margin:auto auto 20px;
+
+  animation:spin 1s linear infinite;
 }
 
 @keyframes spin{
-  to{transform:rotate(360deg);}
+  to{
+    transform:rotate(360deg);
+  }
 }
 
 #error-msg{
   display:none;
   text-align:center;
-  padding:60px;
-  color:var(--fail);
+  padding:80px;
 }
 
-@media(max-width:768px){
-  h1{
-    font-size:2rem;
-  }
+.error-box{
+  display:inline-block;
+  background:rgba(255,23,68,0.1);
+  border:1px solid rgba(255,23,68,0.3);
+  color:var(--fail);
+
+  padding:24px;
+  border-radius:10px;
+
+  font-family:'Space Mono',monospace;
 }
+
+#report{
+  display:none;
+}
+
+@media(max-width:700px){
+
+  .summary-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+}
+
 </style>
 </head>
-
 <body>
 
 <div class="container">
 
 <header>
-  <h1>Squish Automation Report</h1>
-  <div class="subtitle" id="report-subtitle">
-    Loading report...
-  </div>
+
+<div class="logo-tag">
+<span class="logo-dot"></span>
+SQUISH AUTOMATION REPORT
+</div>
+
+<h1>Test Execution Results</h1>
+
+<p class="subtitle" id="report-subtitle">
+Loading report...
+</p>
+
 </header>
 
 <div id="loading">
-  <div class="spinner"></div>
-  Loading results.json...
+
+<div class="spinner"></div>
+
+Loading report...
+
 </div>
 
 <div id="error-msg">
-  Failed to load results.json
+
+<div class="error-box">
+
+Failed to load results.json
+
 </div>
 
-<div id="report" style="display:none"></div>
+</div>
+
+<div id="report"></div>
 
 </div>
 
 <script>
 
-const JSON_FILE = 'results.json';
+const JSON_FILE='results.json';
 
 function escHtml(s){
+
   return String(s || '')
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
@@ -456,54 +502,27 @@ function escHtml(s){
     .replace(/'/g,'&#39;');
 }
 
-function fmtTime(iso){
-  if(!iso) return '—';
-
-  return new Date(iso).toLocaleTimeString('en-US',{
-    hour:'2-digit',
-    minute:'2-digit',
-    second:'2-digit',
-    hour12:false
-  });
-}
-
-function fmtDate(iso){
-  if(!iso) return '—';
-
-  return new Date(iso).toLocaleDateString('en-US',{
-    year:'numeric',
-    month:'short',
-    day:'2-digit'
-  });
-}
-
-function duration(start,stop){
-  if(!start || !stop) return '';
-
-  const ms = new Date(stop) - new Date(start);
-
-  if(ms < 1000) return ms + 'ms';
-
-  return (ms/1000).toFixed(2) + 's';
-}
-
 function toggleCollapse(id){
-  const el = document.getElementById(id);
+
+  const el=document.getElementById(id);
 
   if(!el) return;
 
   el.classList.toggle('open');
 }
 
+function fmtDate(d){
+
+  return new Date(d).toLocaleString();
+}
+
 function analyzeTests(tests){
 
-  const stats = {
+  const stats={
     pass:0,
     fail:0,
     skip:0,
-    error:0,
-    log:0,
-    total:0
+    error:0
   };
 
   function walk(arr){
@@ -512,31 +531,10 @@ function analyzeTests(tests){
 
     for(const t of arr){
 
-      if(
-        t.type === 'scriptedVerificationResult' ||
-        t.type === 'propertyVerificationResult'
-      ){
-
-        stats.total++;
-
-        if(t.result === 'PASS') stats.pass++;
-        else if(t.result === 'FAIL') stats.fail++;
-        else if(t.result === 'ERROR') stats.error++;
-      }
-
-      else if(t.type === 'msg'){
-
-        stats.total++;
-
-        if(t.result === 'LOG') stats.log++;
-        else if(t.result === 'PASS') stats.pass++;
-        else if(t.result === 'FAIL') stats.fail++;
-      }
-
-      if(t.isSkipped){
-        stats.skip++;
-        stats.total++;
-      }
+      if(t.result==='PASS') stats.pass++;
+      else if(t.result==='FAIL') stats.fail++;
+      else if(t.result==='ERROR') stats.error++;
+      else if(t.isSkipped) stats.skip++;
 
       if(t.tests) walk(t.tests);
     }
@@ -547,471 +545,325 @@ function analyzeTests(tests){
   return stats;
 }
 
-function tcOverallStatus(tests){
+function drawDonut(pass,fail,skip,error,total){
 
-  const s = analyzeTests(tests);
+  if(total===0) return;
 
-  if(s.error > 0 || s.fail > 0) return 'fail';
+  const r=80;
+  const c=2*Math.PI*r;
 
-  if(s.skip > 0 && s.pass === 0) return 'skip';
+  const segments=[
+    {id:'seg-pass',val:pass,color:'#00e676'},
+    {id:'seg-fail',val:fail,color:'#ff1744'},
+    {id:'seg-error',val:error,color:'#ff5252'},
+    {id:'seg-skip',val:skip,color:'#ffd740'}
+  ];
 
-  return 'pass';
-}
+  let offset=0;
 
-function renderMessages(tests){
+  segments.forEach(seg=>{
 
-  const items = [];
+    const el=document.getElementById(seg.id);
 
-  for(const t of tests){
+    if(!el || seg.val<=0) return;
 
-    if(
-      t.type === 'msg' ||
-      t.type === 'scriptedVerificationResult'
-    ){
+    const dash=(seg.val/total)*c;
 
-      const cls =
-        t.result === 'PASS' ? 'pass' :
-        t.result === 'FAIL' ? 'fail' :
-        t.result === 'ERROR' ? 'error' :
-        'log';
-
-      const icon =
-        t.result === 'PASS' ? '✓' :
-        t.result === 'FAIL' ? '✗' :
-        t.result === 'ERROR' ? '⚠' :
-        '›';
-
-      items.push(`
-        <li class="msg-item ${cls}">
-          <div>${icon}</div>
-
-          <div class="msg-content">
-
-            <div>
-              ${escHtml(t.text || '')}
-            </div>
-
-            ${t.detail ? `
-              <div class="msg-detail">
-                ${escHtml(t.detail)}
-              </div>
-            ` : ''}
-
-            ${t.screenshotUrl ? `
-              <div class="screenshot-badge">
-                📸 Screenshot Available
-              </div>
-            ` : ''}
-
-          </div>
-
-          <div class="msg-time">
-            ${fmtTime(t.time)}
-          </div>
-        </li>
-      `);
-    }
-  }
-
-  return items.length
-    ? `<ul class="msg-list">${items.join('')}</ul>`
-    : '';
-}
-
-function renderStep(step){
-
-  let cls='step-skip';
-  let dot='var(--skip)';
-  let icon='○';
-
-  if(step.isSkipped){
-    cls='step-skip';
-  }
-  else{
-
-    const msgs = step.tests || [];
-
-    const hasError = msgs.some(m =>
-      m.result === 'ERROR' ||
-      m.result === 'FAIL'
+    el.setAttribute(
+      'stroke-dasharray',
+      `${dash} ${c-dash}`
     );
 
-    const hasPass = msgs.some(m =>
-      m.result === 'PASS'
+    el.setAttribute(
+      'stroke-dashoffset',
+      -offset
     );
 
-    if(hasError){
-      cls='step-fail';
-      dot='var(--fail)';
-      icon='✗';
-    }
-    else if(hasPass){
-      cls='step-pass';
-      dot='var(--pass)';
-      icon='✓';
-    }
-    else{
-      cls='step-pass';
-      dot='var(--log)';
-      icon='›';
-    }
-  }
-
-  return `
-    <div class="step-item ${cls}">
-      <span class="step-dot" style="background:${dot}"></span>
-      <span>${icon} ${escHtml(step.name || '')}</span>
-    </div>
-  `;
-}
-
-function renderFeature(feat){
-
-  let html = `
-    <div class="feature-block">
-
-      <div class="feature-header">
-        ◈ Feature — ${escHtml(feat.name || '')}
-      </div>
-  `;
-
-  const scenarios = (feat.tests || []).filter(t =>
-    t.type === 'scenariooutline'
-  );
-
-  scenarios.forEach(sc => {
-
-    html += `
-      <div class="scenario-block">
-
-        <div class="scenario-name">
-          🧪 ${escHtml(sc.name || 'Scenario')}
-        </div>
-    `;
-
-    const rows = (sc.tests || []).filter(r =>
-      r.type === 'row'
+    el.setAttribute(
+      'stroke',
+      seg.color
     );
 
-    rows.forEach(row => {
-
-      html += `
-        <div style="
-          margin:10px 0;
-          padding:10px;
-          border:1px solid var(--border);
-          border-radius:8px;
-        ">
-
-          <div style="
-            margin-bottom:12px;
-            color:var(--accent);
-            font-family:'Space Mono',monospace;
-          ">
-            ${escHtml(row.name || '')}
-          </div>
-      `;
-
-      const steps = (row.tests || []).filter(s =>
-        s.type === 'step'
-      );
-
-      steps.forEach(step => {
-
-        html += renderStep(step);
-
-        const leafMsgs = (step.tests || []).filter(m =>
-          m.type === 'msg' ||
-          m.type === 'scriptedVerificationResult'
-        );
-
-        if(leafMsgs.length){
-          html += renderMessages(leafMsgs);
-        }
-      });
-
-      html += `</div>`;
-    });
-
-    html += `</div>`;
+    offset+=dash;
   });
-
-  html += `</div>`;
-
-  return html;
-}
-
-let tcCounter = 0;
-
-function renderTestCase(tc){
-
-  tcCounter++;
-
-  const id = 'tc-' + tcCounter;
-
-  const status = tcOverallStatus(tc.tests || []);
-
-  const dur = duration(tc.start, tc.stop);
-
-  let bodyHtml = '';
-
-  for(const child of (tc.tests || [])){
-
-    if(child.type === 'feature'){
-      bodyHtml += renderFeature(child);
-    }
-
-    else if(
-      child.type === 'msg' ||
-      child.type === 'scriptedVerificationResult'
-    ){
-      bodyHtml += renderMessages([child]);
-    }
-  }
-
-  return `
-    <div class="testcase">
-
-      <div class="testcase-header"
-           onclick="toggleCollapse('${id}')">
-
-        <span class="tc-status status-${status}"></span>
-
-        <span class="tc-name">
-          ${escHtml(tc.name || '')}
-        </span>
-
-        <span class="tc-duration">
-          ${dur}
-        </span>
-
-        <span class="badge badge-${status}">
-          ${status.toUpperCase()}
-        </span>
-
-      </div>
-
-      <div class="testcase-body collapsible open"
-           id="${id}">
-
-        ${bodyHtml}
-
-      </div>
-    </div>
-  `;
-}
-
-let suiteCounter = 0;
-
-function renderSuite(suite){
-
-  suiteCounter++;
-
-  const id = 'suite-' + suiteCounter;
-
-  const testCases = (suite.tests || []).filter(t =>
-    t.type === 'testcase'
-  );
-
-  const dur = duration(suite.start, suite.stop);
-
-  const stats = analyzeTests(suite.tests || []);
-
-  return `
-    <div class="suite-card">
-
-      <div class="suite-header"
-           onclick="toggleCollapse('${id}')">
-
-        <div>
-          <div class="suite-name">
-            ${escHtml(suite.name || '')}
-          </div>
-
-          <div class="suite-meta">
-            ${testCases.length} testcase(s)
-            • ${dur}
-          </div>
-        </div>
-
-        <div style="margin-left:auto;display:flex;gap:6px;">
-
-          ${stats.pass ? `
-            <span class="badge badge-pass">
-              ${stats.pass} PASS
-            </span>
-          ` : ''}
-
-          ${stats.fail ? `
-            <span class="badge badge-fail">
-              ${stats.fail} FAIL
-            </span>
-          ` : ''}
-
-          ${stats.error ? `
-            <span class="badge badge-error">
-              ${stats.error} ERR
-            </span>
-          ` : ''}
-
-          ${stats.skip ? `
-            <span class="badge badge-skip">
-              ${stats.skip} SKIP
-            </span>
-          ` : ''}
-
-        </div>
-      </div>
-
-      <div class="suite-body collapsible open"
-           id="${id}">
-
-        ${testCases.map(renderTestCase).join('')}
-
-      </div>
-    </div>
-  `;
 }
 
 function renderReport(data){
 
-  const suites = (data.tests || []).filter(t =>
-    t.type === 'testsuite'
-  );
-
-  const allTests = [];
-
-  suites.forEach(s =>
-    (s.tests || []).forEach(tc => {
-      if(tc.type === 'testcase'){
-        allTests.push(tc);
-      }
-    })
-  );
+  const suites=(data.tests || []);
 
   let totalPass=0;
   let totalFail=0;
   let totalSkip=0;
   let totalError=0;
 
-  allTests.forEach(tc => {
+  suites.forEach(s=>{
 
-    const s = analyzeTests(tc.tests || []);
+    const stats=analyzeTests(s.tests);
 
-    totalPass += s.pass;
-    totalFail += s.fail;
-    totalSkip += s.skip;
-    totalError += s.error;
+    totalPass+=stats.pass;
+    totalFail+=stats.fail;
+    totalSkip+=stats.skip;
+    totalError+=stats.error;
   });
 
-  const totalEvents =
-    totalPass +
-    totalFail +
-    totalSkip +
+  const totalEvents=
+    totalPass+
+    totalFail+
+    totalSkip+
     totalError;
 
-  const passRate = totalEvents
-    ? Math.round((totalPass / totalEvents) * 100)
-    : 0;
+  const passRate=
+    totalEvents
+      ? Math.round((totalPass/totalEvents)*100)
+      : 0;
 
-  const start = suites[0]?.start;
+  document.getElementById('report-subtitle').textContent=
+    fmtDate(suites[0]?.start);
 
-  document.getElementById('report-subtitle').textContent =
-    `${fmtDate(start)} • ${fmtTime(start)} • Squish v${data.version.major}.${data.version.minor}`;
+  let html=`
 
-  const html = `
+  <div class="summary-grid">
 
-    <div class="summary-grid">
-
-      <div class="stat-card total">
-        <div class="stat-num">${totalEvents}</div>
-        <div class="stat-label">Total</div>
-      </div>
-
-      <div class="stat-card passed">
-        <div class="stat-num">${totalPass}</div>
-        <div class="stat-label">Passed</div>
-      </div>
-
-      <div class="stat-card failed">
-        <div class="stat-num">${totalFail}</div>
-        <div class="stat-label">Failed</div>
-      </div>
-
-      <div class="stat-card skipped">
-        <div class="stat-num">${totalSkip}</div>
-        <div class="stat-label">Skipped</div>
-      </div>
-
-      <div class="stat-card errors">
-        <div class="stat-num">${totalError}</div>
-        <div class="stat-label">Errors</div>
-      </div>
-
+    <div class="stat-card total">
+      <div class="stat-num">${totalEvents}</div>
+      <div class="stat-label">Total</div>
     </div>
 
-    <div class="progress-section">
+    <div class="stat-card pass">
+      <div class="stat-num">${totalPass}</div>
+      <div class="stat-label">Passed</div>
+    </div>
 
-      <div class="progress-label">
+    <div class="stat-card fail">
+      <div class="stat-num">${totalFail}</div>
+      <div class="stat-label">Failed</div>
+    </div>
 
-        <div class="progress-title">
-          Pass Rate
-        </div>
+    <div class="stat-card skip">
+      <div class="stat-num">${totalSkip}</div>
+      <div class="stat-label">Skipped</div>
+    </div>
 
-        <div class="progress-pct">
+    <div class="stat-card error">
+      <div class="stat-num">${totalError}</div>
+      <div class="stat-label">Errors</div>
+    </div>
+
+  </div>
+
+  <div class="chart-section">
+
+    <div class="chart-title">
+      Result Breakdown
+    </div>
+
+    <div class="donut-wrap">
+
+      <svg width="220" height="220" viewBox="0 0 220 220">
+
+        <circle
+          cx="110"
+          cy="110"
+          r="80"
+          fill="none"
+          stroke="#1e2a3f"
+          stroke-width="24"
+        />
+
+        <circle id="seg-pass" cx="110" cy="110" r="80" fill="none" stroke-width="24"/>
+        <circle id="seg-fail" cx="110" cy="110" r="80" fill="none" stroke-width="24"/>
+        <circle id="seg-error" cx="110" cy="110" r="80" fill="none" stroke-width="24"/>
+        <circle id="seg-skip" cx="110" cy="110" r="80" fill="none" stroke-width="24"/>
+
+      </svg>
+
+      <div class="donut-center">
+
+        <div class="donut-pct">
           ${passRate}%
         </div>
 
-      </div>
-
-      <div class="progress-bar">
-
-        <div class="progress-fill pass"
-             style="width:${totalPass/totalEvents*100}%"></div>
-
-        <div class="progress-fill fail"
-             style="width:${totalFail/totalEvents*100}%"></div>
-
-        <div class="progress-fill skip"
-             style="width:${totalSkip/totalEvents*100}%"></div>
+        <div class="donut-label">
+          PASS RATE
+        </div>
 
       </div>
 
     </div>
 
-    <div class="section-title">
-      Test Suites
+    <div class="chart-legend">
+
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#00e676"></div>
+        <div class="legend-label">Passed</div>
+        <div class="legend-value">${totalPass}</div>
+      </div>
+
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#ff1744"></div>
+        <div class="legend-label">Failed</div>
+        <div class="legend-value">${totalFail}</div>
+      </div>
+
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#ff5252"></div>
+        <div class="legend-label">Errors</div>
+        <div class="legend-value">${totalError}</div>
+      </div>
+
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#ffd740"></div>
+        <div class="legend-label">Skipped</div>
+        <div class="legend-value">${totalSkip}</div>
+      </div>
+
     </div>
 
-    ${suites.map(renderSuite).join('')}
+  </div>
 
+  <div class="section-title">
+    Test Suites
+  </div>
   `;
 
-  const report = document.getElementById('report');
+  let suiteId=0;
 
-  report.innerHTML = html;
+  suites.forEach(suite=>{
+
+    suiteId++;
+
+    html+=`
+
+    <div class="suite-card">
+
+      <div class="suite-header"
+           onclick="toggleCollapse('suite-${suiteId}')">
+
+        <div class="suite-name">
+          ${escHtml(suite.name)}
+        </div>
+
+      </div>
+
+      <div class="suite-body collapsible open"
+           id="suite-${suiteId}">
+    `;
+
+    let tcId=0;
+
+    (suite.tests || []).forEach(tc=>{
+
+      tcId++;
+
+      const stats=analyzeTests(tc.tests);
+
+      const status=
+        stats.fail || stats.error
+          ? 'fail'
+          : 'pass';
+
+      html+=`
+
+      <div class="testcase">
+
+        <div class="testcase-header"
+             onclick="toggleCollapse('tc-${suiteId}-${tcId}')">
+
+          <div class="tc-status status-${status}"></div>
+
+          <div class="tc-name">
+            ${escHtml(tc.name)}
+          </div>
+
+          <div class="badge badge-${status}">
+            ${status.toUpperCase()}
+          </div>
+
+        </div>
+
+        <div class="testcase-body collapsible open"
+             id="tc-${suiteId}-${tcId}">
+
+          <ul class="msg-list">
+      `;
+
+      function collect(arr){
+
+        if(!arr) return;
+
+        arr.forEach(t=>{
+
+          if(t.result){
+
+            html+=`
+
+            <li class="msg-item ${t.result.toLowerCase()}">
+
+              <div class="msg-text">
+
+                ${escHtml(t.text || t.name)}
+
+              </div>
+
+            </li>
+            `;
+          }
+
+          if(t.tests) collect(t.tests);
+        });
+      }
+
+      collect(tc.tests);
+
+      html+=`
+          </ul>
+        </div>
+      </div>
+      `;
+    });
+
+    html+=`
+      </div>
+    </div>
+    `;
+  });
+
+  const report=document.getElementById('report');
+
+  report.innerHTML=html;
 
   document.getElementById('loading').style.display='none';
 
   report.style.display='block';
+
+  setTimeout(()=>{
+
+    drawDonut(
+      totalPass,
+      totalFail,
+      totalSkip,
+      totalError,
+      totalEvents
+    );
+
+  },100);
 }
 
 async function loadReport(){
 
   try{
 
-    const res = await fetch(JSON_FILE);
+    const res=await fetch(JSON_FILE);
 
-    if(!res.ok){
+    if(!res.ok)
       throw new Error('Failed');
-    }
 
-    const data = await res.json();
+    const data=await res.json();
 
     renderReport(data);
 
-  }
-  catch(err){
+  }catch(err){
 
     console.error(err);
 
