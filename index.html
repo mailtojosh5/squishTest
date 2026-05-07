@@ -793,6 +793,142 @@ h1 {
 ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
+/* ───── INLINE IMAGES ───── */
+.msg-item.has-image { padding-bottom: 14px; }
+
+.msg-text-row {
+  margin-bottom: 12px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.inline-img-wrap {
+  margin-top: 10px;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.inline-img-path {
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  word-break: break-all;
+  letter-spacing: 0.3px;
+}
+
+.inline-img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  cursor: zoom-in;
+  transition: transform 0.25s ease, filter 0.25s ease;
+  padding: 10px;
+  background: #0a0c14;
+}
+
+.inline-img:hover {
+  transform: scale(1.01);
+  filter: brightness(1.08);
+}
+
+.inline-img-wrap.img-broken .inline-img-path {
+  border-bottom-color: rgba(255,107,53,0.3);
+}
+
+.img-broken-msg {
+  padding: 20px;
+  align-items: center;
+  gap: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--error);
+  background: rgba(255,107,53,0.06);
+}
+
+.img-open-link {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(99,102,241,0.4);
+  padding-bottom: 1px;
+  transition: color 0.2s;
+}
+.img-open-link:hover { color: var(--pass); border-bottom-color: var(--pass); }
+
+/* ───── LIGHTBOX ───── */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(5,7,15,0.92);
+  backdrop-filter: blur(16px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  cursor: zoom-out;
+  animation: lbIn 0.2s ease;
+}
+
+#lightbox.open { display: flex; }
+
+@keyframes lbIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+#lightbox-img {
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 12px;
+  border: 1px solid var(--border2);
+  box-shadow: 0 30px 100px rgba(0,0,0,0.7);
+  object-fit: contain;
+  animation: lbImgIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  cursor: default;
+}
+
+@keyframes lbImgIn {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+#lightbox-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 80vw;
+  text-align: center;
+  word-break: break-all;
+}
+
+#lightbox-close {
+  position: fixed;
+  top: 22px;
+  right: 28px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+#lightbox-close:hover { background: var(--fail); color: #fff; border-color: var(--fail); }
+
 </style>
 </head>
 <body>
@@ -836,6 +972,13 @@ h1 {
 
 </div>
 
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()"/>
+  <div id="lightbox-caption"></div>
+</div>
+
 <script>
 const JSON_FILE = 'results.json';
 
@@ -847,11 +990,11 @@ const DEMO_DATA = {
     tests: [
       { name: "TC_Login_001", tests: [
         { result:"PASS", text:"Verify login with valid credentials" },
-        { result:"PASS", text:"Check dashboard redirect after login" },
+        { result:"PASS", text:"Screenshot saved: c:\\report\\suite_CMSearch\\tst_CMSearch\\passedImages\\passed_1.png" },
         { result:"PASS", text:"Validate session token created" }
       ]},
       { name: "TC_Login_002", tests: [
-        { result:"FAIL", text:"Login with invalid password should show error" },
+        { result:"FAIL", text:"Login with invalid password — diff: c:\\report\\suite_CMSearch\\tst_CMSearch\\passedImages\\passed_5.png" },
         { result:"PASS", text:"Lockout after 3 failed attempts" }
       ]},
       { name: "TC_Login_003", isSkipped:true, tests: [
@@ -1196,12 +1339,58 @@ function renderReport(data){
         if(!arr) return;
         arr.forEach(t => {
           if(t.result){
-            const cls = t.result.toLowerCase();
-            html += `
-            <li class="msg-item ${cls}">
-              <div class="msg-tag">${t.result}</div>
-              <div>${esc(t.text || t.name)}</div>
-            </li>`;
+            const cls   = t.result.toLowerCase();
+            const raw   = String(t.text || t.name || '');
+
+            /* detect every image path inside the text:
+               matches c:\...\file.png / .jpg / .jpeg / .gif / .bmp / .webp
+               also handles forward-slash paths and relative paths            */
+            const imgRe = /([a-zA-Z]:[\\\/][^\s,;|"'<>]+\.(?:png|jpg|jpeg|gif|bmp|webp)|(?:\.{0,2}[\\\/])[^\s,;|"'<>]+\.(?:png|jpg|jpeg|gif|bmp|webp))/gi;
+            const imgPaths = [...raw.matchAll(imgRe)].map(m => m[1]);
+
+            /* build the text portion — replace backslashes for display */
+            const displayText = esc(raw);
+
+            if(imgPaths.length > 0){
+              /* convert Windows path  c:\foo\bar.png  →  file:///c:/foo/bar.png
+                 and normalise backslashes to forward slashes for the src attr  */
+              const imgTags = imgPaths.map(p => {
+                const normalised = p.replace(/\\/g, '/');
+                /* if it looks like an absolute Windows path add file:/// */
+                const src = /^[a-zA-Z]:\//.test(normalised)
+                  ? 'file:///' + normalised
+                  : normalised;
+                return `
+                <div class="inline-img-wrap">
+                  <div class="inline-img-path">📁 ${esc(p)}</div>
+                  <img
+                    class="inline-img"
+                    src="${src}"
+                    alt="${esc(p)}"
+                    loading="lazy"
+                    onclick="openLightbox(this.src, '${esc(p).replace(/'/g,'&#39;')}')"
+                    onerror="this.closest('.inline-img-wrap').classList.add('img-broken'); this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                  />
+                  <div class="img-broken-msg" style="display:none">
+                    <span>⚠ Image not found</span>
+                    <a href="${src}" target="_blank" class="img-open-link">Open path ↗</a>
+                  </div>
+                </div>`;
+              }).join('');
+
+              html += `
+              <li class="msg-item ${cls} has-image">
+                <div class="msg-tag">${t.result}</div>
+                <div class="msg-text-row">${displayText}</div>
+                ${imgTags}
+              </li>`;
+            } else {
+              html += `
+              <li class="msg-item ${cls}">
+                <div class="msg-tag">${t.result}</div>
+                <div>${displayText}</div>
+              </li>`;
+            }
           }
           if(t.tests) collect(t.tests);
         });
@@ -1280,6 +1469,20 @@ async function loadReport(){
     renderReport(DEMO_DATA);
   }
 }
+
+/* ── LIGHTBOX ── */
+function openLightbox(src, caption){
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox-caption').textContent = caption;
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); });
 
 loadReport();
 </script>
