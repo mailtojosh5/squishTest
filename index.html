@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Squish Automation Report</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;family=Syne:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #0a0d14;
@@ -107,7 +105,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 .meta-chip span{color:var(--text);font-weight:700;}
 
 /* CHARTS */
-.charts-wrapper{display:grid;grid-template-columns:1fr;gap:22px;margin-bottom:28px;}
+.charts-wrapper{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:28px;}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;position:relative;overflow:hidden;animation:fadeUp 0.7s 0.25s ease both;box-shadow:var(--card-glow);}
 .chart-card::before{content:'';position:absolute;top:-1px;left:-1px;right:-1px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);opacity:0.5;}
 .chart-card-title{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:26px;font-family:'Space Mono',monospace;}
@@ -129,6 +127,12 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 .legend-val{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;}
 .legend-pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);width:36px;text-align:right;}
 
+/* PIE */
+.pie-layout{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+.pie-wrap{position:relative;width:190px;height:190px;flex-shrink:0;}
+.pie-wrap svg{overflow:visible;filter:drop-shadow(0 4px 18px rgba(0,0,0,0.4));}
+.pie-slice{transition:transform 0.2s ease,opacity 0.2s;cursor:pointer;}
+.pie-slice:hover{filter:brightness(1.18);}
 
 /* LINE GRAPH */
 .line-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:32px;box-shadow:var(--card-glow);animation:fadeUp 0.7s 0.3s ease both;}
@@ -206,6 +210,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 .vp-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
 .vp-tag{font-size:10px;font-family:'Space Mono',monospace;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:3px;padding:2px 8px;color:var(--muted);}
 .vp-tag strong{color:var(--text);}
+.screenshot-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Space Mono',monospace;color:var(--accent2);background:rgba(124,77,255,0.1);border:1px solid rgba(124,77,255,0.3);padding:4px 10px;border-radius:4px;margin-top:4px;}
 
 /* INLINE IMAGES */
 .msg-item.has-image{padding-bottom:12px;}
@@ -262,7 +267,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 @keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
-
+@keyframes pieIn{from{opacity:0;transform:scale(0.55) rotate(-20deg)}to{opacity:0.92;transform:scale(1) rotate(0deg)}}
 
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -270,7 +275,7 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
 
 @media(max-width:900px){.charts-wrapper{grid-template-columns:1fr;}}
-@media(max-width:600px){.summary-grid{grid-template-columns:repeat(2,1fr);}.meta-bar{flex-direction:column;}.donut-layout{flex-direction:column;}}
+@media(max-width:600px){.summary-grid{grid-template-columns:repeat(2,1fr);}.meta-bar{flex-direction:column;}.donut-layout,.pie-layout{flex-direction:column;}}
 </style>
 </head>
 <body>
@@ -278,11 +283,11 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 <div class="orb orb3"></div>
-<div id="tooltip"></div>
+<div id="tooltip" class="" style="left: 954px; top: 643px;">Pass: 19 (79%)</div>
 
 <div id="lightbox" onclick="closeLightbox()">
   <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()"/>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
   <div id="lightbox-caption"></div>
 </div>
 
@@ -290,30 +295,554 @@ h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;letter-spacing:-1px;line-hei
   <header>
     <div class="logo-tag"><span class="logo-dot"></span> SQUISH AUTOMATION REPORT</div>
     <h1>Test Execution Results</h1>
-    <p class="subtitle" id="report-subtitle">Loading report data…</p>
+    <p class="subtitle" id="report-subtitle">May 07, 2026 · 14:47:36 · Squish v6.7</p>
   </header>
-  <div id="loading"><div class="spinner"></div><div class="loading-text">FETCHING RESULTS…</div></div>
+  <div id="loading" style="display: none;"><div class="spinner"></div><div class="loading-text">FETCHING RESULTS…</div></div>
   <div id="error-msg"><div class="error-box">⚠ Failed to load <code>results.json</code><br><br>Make sure <strong>results.json</strong> is in the same folder as <strong>index.html</strong>.</div></div>
-  <div id="report"></div>
+  <div id="report" style="display: block;">
+  <div class="summary-grid">
+    <div class="stat-card total"><div class="stat-num" id="cnt-total">24</div><div class="stat-label">Total Events</div><div class="stat-bar" id="bar-total" style="width: 100%;"></div></div>
+    <div class="stat-card passed"><div class="stat-num" id="cnt-pass">19</div><div class="stat-label">Passed</div><div class="stat-bar" id="bar-pass" style="width: 79.1667%;"></div></div>
+    <div class="stat-card failed"><div class="stat-num" id="cnt-fail">4</div><div class="stat-label">Failed</div><div class="stat-bar" id="bar-fail" style="width: 16.6667%;"></div></div>
+    <div class="stat-card skipped"><div class="stat-num" id="cnt-skip">0</div><div class="stat-label">Skipped</div><div class="stat-bar" id="bar-skip" style="width: 0%;"></div></div>
+    <div class="stat-card errors"><div class="stat-num" id="cnt-error">1</div><div class="stat-label">Errors</div><div class="stat-bar" id="bar-error" style="width: 4.16667%;"></div></div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-label">
+      <span class="progress-title">Pass Rate</span>
+      <span class="progress-pct">79%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill pass" id="prog-pass" style="width: 79.1667%;"></div>
+      <div class="progress-fill fail" id="prog-fail" style="width: 16.6667%;"></div>
+      <div class="progress-fill skip" id="prog-skip" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="meta-bar">
+    <div class="meta-chip">DATE <span>May 07, 2026</span></div>
+    <div class="meta-chip">TIME <span>14:47:36</span></div>
+    <div class="meta-chip">SUITES <span>3</span></div>
+    <div class="meta-chip">TEST CASES <span>8</span></div>
+    <div class="meta-chip">VERSION <span>v6.7</span></div>
+  </div>
+
+  <div class="charts-wrapper">
+    <div class="chart-card">
+      <div class="chart-card-title">◎ Donut — Result Breakdown</div>
+      <div class="donut-layout">
+    <div class="donut-wrap">
+      <svg width="190" height="190" viewBox="0 0 190 190">
+        <circle class="donut-bg" cx="95" cy="95" r="78"></circle>
+        <circle id="ds-pass" class="donut-seg" cx="95" cy="95" r="78" stroke="#00e676" stroke-dasharray="0 490.0884539600077" stroke-dashoffset="0" style="stroke-dasharray: 387.987, 102.102; stroke-dashoffset: 0;"></circle><circle id="ds-fail" class="donut-seg" cx="95" cy="95" r="78" stroke="#ff1744" stroke-dasharray="0 490.0884539600077" stroke-dashoffset="0" style="stroke-dasharray: 81.6814, 408.407; stroke-dashoffset: -387.987;"></circle><circle id="ds-error" class="donut-seg" cx="95" cy="95" r="78" stroke="#ff5252" stroke-dasharray="0 490.0884539600077" stroke-dashoffset="0" style="stroke-dasharray: 20.4204, 469.668; stroke-dashoffset: -469.668;"></circle>
+      </svg>
+      <div class="donut-center">
+        <div class="donut-pct">79%</div>
+        <div class="donut-lbl">PASS RATE</div>
+      </div>
+    </div>
+    <div class="chart-legend"><div class="legend-row">
+    <div class="legend-swatch" style="background:#00e676"></div>
+    <div class="legend-name">Passed</div>
+    <div class="legend-val" style="color:#00e676">19</div>
+    <div class="legend-pct">79%</div>
+  </div><div class="legend-row">
+    <div class="legend-swatch" style="background:#ff1744"></div>
+    <div class="legend-name">Failed</div>
+    <div class="legend-val" style="color:#ff1744">4</div>
+    <div class="legend-pct">17%</div>
+  </div><div class="legend-row">
+    <div class="legend-swatch" style="background:#ff5252"></div>
+    <div class="legend-name">Errors</div>
+    <div class="legend-val" style="color:#ff5252">1</div>
+    <div class="legend-pct">4%</div>
+  </div></div>
+  </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">◉ Pie — Distribution</div>
+      <div class="pie-layout">
+    <div class="pie-wrap">
+      <svg width="190" height="190" viewBox="0 0 190 190" id="pie-svg">
+        <defs><filter id="pg0" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter><filter id="pg1" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter><filter id="pg2" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs><path class="pie-slice" d="M 95 95 L 95 7 A 88 88 0 1 1 9.99852728656198 72.22392403097821 Z" fill="#00e676" opacity="0.9" data-label="Pass: 19 (79%)" filter="url(#pg0)" style="animation:pieIn 0.8s cubic-bezier(0.34,1.56,0.64,1) 0s both;transform-origin:95px 95px;"></path><text x="129.28544368177114" y="139.68166012520237" text-anchor="middle" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="10" font-weight="700" fill="#0a0d14" pointer-events="none">79%</text><path class="pie-slice" d="M 95 95 L 9.99852728656198 72.22392403097821 A 88 88 0 0 1 72.22392403097818 9.998527286561995 Z" fill="#ff1744" opacity="0.9" data-label="Fail: 4 (17%)" filter="url(#pg1)" style="animation:pieIn 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;transform-origin:95px 95px;"></path><text x="55.175746083573635" y="55.17574608357365" text-anchor="middle" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="10" font-weight="700" fill="#fff" pointer-events="none">17%</text><path class="pie-slice" d="M 95 95 L 72.22392403097818 9.998527286561995 A 88 88 0 0 1 94.99999999999999 7 Z" fill="#ff5252" opacity="0.9" data-label="Error: 1 (4%)" filter="url(#pg2)" style="animation:pieIn 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.2s both;transform-origin:95px 95px;"></path><circle cx="95" cy="95" r="88" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"></circle>
+      </svg>
+    </div>
+    <div class="chart-legend"><div class="legend-row">
+    <div class="legend-swatch" style="background:#00e676;border-radius:50%"></div>
+    <div class="legend-name">Pass</div>
+    <div class="legend-val" style="color:#00e676">19</div>
+    <div class="legend-pct">79%</div>
+  </div><div class="legend-row">
+    <div class="legend-swatch" style="background:#ff1744;border-radius:50%"></div>
+    <div class="legend-name">Fail</div>
+    <div class="legend-val" style="color:#ff1744">4</div>
+    <div class="legend-pct">17%</div>
+  </div><div class="legend-row">
+    <div class="legend-swatch" style="background:#ff5252;border-radius:50%"></div>
+    <div class="legend-name">Error</div>
+    <div class="legend-val" style="color:#ff5252">1</div>
+    <div class="legend-pct">4%</div>
+  </div></div>
+  </div>
+    </div>
+  </div>
+
+  <div class="line-card">
+    <div class="line-card-title">◎ Suite-by-Suite Line Graph</div>
+    <div class="line-chart-wrap">
+      <svg width="740" height="210" viewBox="0 0 740 210" style="max-width:100%;">
+        <line class="lc-grid" x1="46" y1="168" x2="718" y2="168"></line>
+            <text class="lc-axis" x="40" y="172" text-anchor="end">0</text><line class="lc-grid" x1="46" y1="131" x2="718" y2="131"></line>
+            <text class="lc-axis" x="40" y="135" text-anchor="end">3</text><line class="lc-grid" x1="46" y1="94" x2="718" y2="94"></line>
+            <text class="lc-axis" x="40" y="98" text-anchor="end">5</text><line class="lc-grid" x1="46" y1="57" x2="718" y2="57"></line>
+            <text class="lc-axis" x="40" y="61" text-anchor="end">8</text><line class="lc-grid" x1="46" y1="20" x2="718" y2="20"></line>
+            <text class="lc-axis" x="40" y="24" text-anchor="end">10</text><text class="lc-axis" x="46" y="184" text-anchor="middle">suite_CMSearch</text><text class="lc-axis" x="382" y="184" text-anchor="middle">…ite_Dashboard</text><text class="lc-axis" x="718" y="184" text-anchor="middle">suite_API</text><polygon points="46,168 46,20 382,108.8 718,94 718,168" fill="rgba(0,230,118,0.07)" stroke="none"></polygon>
+            <polyline class="lc-line lc-line-pass" points="46,20 382,108.8 718,94" stroke-dasharray="9999" stroke-dashoffset="9999" id="ll-pass" style="stroke-dasharray: 683.862; stroke-dashoffset: 0; transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);"></polyline>
+            <circle class="lc-dot lc-dot-pass" cx="46" cy="20" r="4" onmouseenter="showTT(event,'suite_CMSearch: 10 pass')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_CMSearch — pass: 10</title></circle><circle class="lc-dot lc-dot-pass" cx="382" cy="108.8" r="4" onmouseenter="showTT(event,'suite_Dashboard: 4 pass')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_Dashboard — pass: 4</title></circle><circle class="lc-dot lc-dot-pass" cx="718" cy="94" r="4" onmouseenter="showTT(event,'suite_API: 5 pass')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_API — pass: 5</title></circle><polygon points="46,168 46,123.6 382,153.2 718,153.2 718,168" fill="rgba(255,23,68,0.07)" stroke="none"></polygon>
+            <polyline class="lc-line lc-line-fail" points="46,123.6 382,153.2 718,153.2" stroke-dasharray="9999" stroke-dashoffset="9999" id="ll-fail" style="stroke-dasharray: 673.301; stroke-dashoffset: 0; transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.18s;"></polyline>
+            <circle class="lc-dot lc-dot-fail" cx="46" cy="123.6" r="4" onmouseenter="showTT(event,'suite_CMSearch: 3 fail')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_CMSearch — fail: 3</title></circle><circle class="lc-dot lc-dot-fail" cx="382" cy="153.2" r="4" onmouseenter="showTT(event,'suite_Dashboard: 1 fail')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_Dashboard — fail: 1</title></circle><circle class="lc-dot lc-dot-fail" cx="718" cy="153.2" r="4" onmouseenter="showTT(event,'suite_API: 1 fail')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_API — fail: 1</title></circle><polygon points="46,168 46,168 382,168 718,168 718,168" fill="rgba(255,215,64,0.05)" stroke="none"></polygon>
+            <polyline class="lc-line lc-line-skip" points="46,168 382,168 718,168" stroke-dasharray="9999" stroke-dashoffset="9999" id="ll-skip" style="stroke-dasharray: 672; stroke-dashoffset: 0; transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.36s;"></polyline>
+            <circle class="lc-dot lc-dot-skip" cx="46" cy="168" r="4" onmouseenter="showTT(event,'suite_CMSearch: 0 skip')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_CMSearch — skip: 0</title></circle><circle class="lc-dot lc-dot-skip" cx="382" cy="168" r="4" onmouseenter="showTT(event,'suite_Dashboard: 0 skip')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_Dashboard — skip: 0</title></circle><circle class="lc-dot lc-dot-skip" cx="718" cy="168" r="4" onmouseenter="showTT(event,'suite_API: 0 skip')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>suite_API — skip: 0</title></circle>
+      </svg>
+    </div>
+    <div class="lc-legend">
+      <div class="lc-legend-item"><div class="lc-legend-line" style="background:var(--pass)"></div>Pass</div>
+      <div class="lc-legend-item"><div class="lc-legend-line" style="background:var(--fail)"></div>Fail / Error</div>
+      <div class="lc-legend-item"><div class="lc-legend-line" style="background:var(--skip)"></div>Skipped</div>
+    </div>
+  </div>
+
+  <div class="section-title">Test Suites</div>
+  <div class="suite-card" style="animation-delay:0s">
+    <div class="suite-header" onclick="toggleCollapse('suite-1')">
+      <div class="suite-icon">⚙</div>
+      <div>
+        <div class="suite-name">suite_CMSearch</div>
+        <div class="suite-meta">4 test cases · 1600.00s</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span class="badge badge-pass">10 PASS</span>
+        <span class="badge badge-fail">2 FAIL</span>
+        <span class="badge badge-error">1 ERR</span>
+        <span class="badge badge-skip">1 SKIP</span>
+      </div>
+      <span class="chevron" id="chev-suite-1">▼</span>
+    </div>
+    <div class="suite-body collapsible open" id="suite-1">
+      <div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-1')">
+      <span class="tc-status status-pass"></span>
+      <span class="tc-name">tst_CMSearch_Login</span>
+      <span class="tc-duration">190.00s</span>
+      <span class="badge badge-pass">PASS</span>
+      <span class="chevron" id="chev-tc-1">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-1">
+      <ul class="msg-list"><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Navigated to login page</div>
+          
+          
+        </div>
+        <span class="msg-time">14:47:56</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Credentials entered</div>
+          
+          
+        </div>
+        <span class="msg-time">14:48:16</span>
+      </li><li class="msg-item pass has-image">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text-row">Screenshot: c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_1.png</div>
+          
+          <div class="inline-img-wrap img-broken">
+      <div class="inline-img-path">📁 c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_1.png</div>
+      <img class="inline-img" src="file:///c:/report/suite_CMSearch/tst_CMSearch/passedImages/passed_1.png" alt="c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_1.png" loading="lazy" onclick="openLightbox(this.src,'c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_1.png')" onerror="this.closest('.inline-img-wrap').classList.add('img-broken');this.style.display='none';this.nextElementSibling.style.display='flex';" style="display: none;">
+      <div class="img-broken-msg" style="display: flex;">
+        <span>⚠ Image not found</span>
+        <a href="file:///c:/report/suite_CMSearch/tst_CMSearch/passedImages/passed_1.png" target="_blank" class="img-open-link">Open path ↗</a>
+      </div>
+    </div>
+        </div>
+        <span class="msg-time">14:48:26</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Verify title</div>
+          <div class="vp-row">
+            <span class="vp-tag">Object: <strong>lblTitle</strong></span>
+            <span class="vp-tag">Expected: <strong>CM Search</strong></span>
+            <span class="vp-tag">Actual: <strong>CM Search</strong></span>
+          </div>
+        </div>
+        <span class="msg-time">14:48:46</span>
+      </li></ul>
+    </div>
+  </div><div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-2')">
+      <span class="tc-status status-fail"></span>
+      <span class="tc-name">tst_CMSearch_Search</span>
+      <span class="tc-duration">190.00s</span>
+      <span class="badge badge-fail">FAIL</span>
+      <span class="chevron" id="chev-tc-2">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-2">
+      <div class="feature-block">
+    <div class="feature-header">◈ Feature — Search Feature</div>
+    <div class="scenario-block">
+    <div class="scenario-name"><span style="width:8px;height:8px;border-radius:50%;background:var(--fail);flex-shrink:0;display:inline-block"></span>Valid search returns results</div>
+    <div class="step-item step-pass"><span class="step-dot" style="background:var(--pass)"></span><span>✓ Given search page is open</span></div><div class="step-item step-pass"><span class="step-dot" style="background:var(--pass)"></span><span>✓ When user enters keyword "CM"</span></div><div class="step-item step-fail"><span class="step-dot" style="background:var(--fail)"></span><span>✗ Then results should appear</span></div><div class="step-error-msg">⚠ Expected 5 results, got 3</div>
+  </div><div class="scenario-block">
+    <div class="scenario-name"><span style="width:8px;height:8px;border-radius:50%;background:var(--pass);flex-shrink:0;display:inline-block"></span>Empty search shows warning</div>
+    <div class="step-item step-pass"><span class="step-dot" style="background:var(--pass)"></span><span>✓ Given empty input</span></div><div class="step-item step-pass"><span class="step-dot" style="background:var(--pass)"></span><span>✓ Then warning banner shown</span></div>
+  </div>
+  </div><ul class="msg-list"><li class="msg-item fail has-image">
+        <span class="msg-icon">✗</span>
+        <div class="msg-content">
+          <div class="msg-text-row">Diff saved: c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_5.png</div>
+          
+          <div class="inline-img-wrap img-broken">
+      <div class="inline-img-path">📁 c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_5.png</div>
+      <img class="inline-img" src="file:///c:/report/suite_CMSearch/tst_CMSearch/passedImages/passed_5.png" alt="c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_5.png" loading="lazy" onclick="openLightbox(this.src,'c:\report\suite_CMSearch\tst_CMSearch\passedImages\passed_5.png')" onerror="this.closest('.inline-img-wrap').classList.add('img-broken');this.style.display='none';this.nextElementSibling.style.display='flex';" style="display: none;">
+      <div class="img-broken-msg" style="display: flex;">
+        <span>⚠ Image not found</span>
+        <a href="file:///c:/report/suite_CMSearch/tst_CMSearch/passedImages/passed_5.png" target="_blank" class="img-open-link">Open path ↗</a>
+      </div>
+    </div>
+        </div>
+        <span class="msg-time">14:54:06</span>
+      </li></ul>
+    </div>
+  </div><div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-3')">
+      <span class="tc-status status-fail"></span>
+      <span class="tc-name">tst_CMSearch_Export</span>
+      <span class="tc-duration">90.00s</span>
+      <span class="badge badge-error">ERROR</span>
+      <span class="chevron" id="chev-tc-3">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-3">
+      <ul class="msg-list"><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Export button clicked</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">File download triggered</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item error">
+        <span class="msg-icon">✗</span>
+        <div class="msg-content">
+          <div class="msg-text">Validation error: unexpected null value</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li></ul>
+    </div>
+  </div><div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-4')">
+      <span class="tc-status status-log"></span>
+      <span class="tc-name">tst_CMSearch_Filter</span>
+      <span class="tc-duration">90.00s</span>
+      <span class="badge badge-log">LOG</span>
+      <span class="chevron" id="chev-tc-4">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-4">
+      <div style="padding:12px 16px;font-size:11px;color:var(--muted);font-family:Space Mono,monospace;">No detailed logs.</div>
+    </div>
+  </div>
+    </div>
+  </div><div class="suite-card" style="animation-delay:0.1s">
+    <div class="suite-header" onclick="toggleCollapse('suite-2')">
+      <div class="suite-icon">⚙</div>
+      <div>
+        <div class="suite-name">suite_Dashboard</div>
+        <div class="suite-meta">2 test cases · 900.00s</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span class="badge badge-pass">4 PASS</span>
+        <span class="badge badge-fail">1 FAIL</span>
+        
+        
+      </div>
+      <span class="chevron" id="chev-suite-2">▼</span>
+    </div>
+    <div class="suite-body collapsible open" id="suite-2">
+      <div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-5')">
+      <span class="tc-status status-pass"></span>
+      <span class="tc-name">tst_Dashboard_Load</span>
+      <span class="tc-duration">90.00s</span>
+      <span class="badge badge-pass">PASS</span>
+      <span class="chevron" id="chev-tc-5">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-5">
+      <ul class="msg-list"><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Dashboard loaded in 1.2s</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">All widgets rendered</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Verify widget count</div>
+          <div class="vp-row">
+            <span class="vp-tag">Object: <strong>widgetContainer</strong></span>
+            <span class="vp-tag">Expected: <strong>6</strong></span>
+            <span class="vp-tag">Actual: <strong>6</strong></span>
+          </div>
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li></ul>
+    </div>
+  </div><div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-6')">
+      <span class="tc-status status-fail"></span>
+      <span class="tc-name">tst_Dashboard_Charts</span>
+      <span class="tc-duration">90.00s</span>
+      <span class="badge badge-fail">FAIL</span>
+      <span class="chevron" id="chev-tc-6">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-6">
+      <ul class="msg-list"><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Bar chart data correct</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item fail">
+        <span class="msg-icon">✗</span>
+        <div class="msg-content">
+          <div class="msg-text">Pie chart missing legend label</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li></ul>
+    </div>
+  </div>
+    </div>
+  </div><div class="suite-card" style="animation-delay:0.2s">
+    <div class="suite-header" onclick="toggleCollapse('suite-3')">
+      <div class="suite-icon">⚙</div>
+      <div>
+        <div class="suite-name">suite_API</div>
+        <div class="suite-meta">2 test cases · 900.00s</div>
+      </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span class="badge badge-pass">5 PASS</span>
+        <span class="badge badge-fail">1 FAIL</span>
+        
+        
+      </div>
+      <span class="chevron" id="chev-suite-3">▼</span>
+    </div>
+    <div class="suite-body collapsible open" id="suite-3">
+      <div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-7')">
+      <span class="tc-status status-pass"></span>
+      <span class="tc-name">tst_API_Users</span>
+      <span class="tc-duration">90.00s</span>
+      <span class="badge badge-pass">PASS</span>
+      <span class="chevron" id="chev-tc-7">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-7">
+      <ul class="msg-list"><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">GET /users → 200</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">POST /users creates record</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">DELETE /users removes record</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li></ul>
+    </div>
+  </div><div class="testcase">
+    <div class="testcase-header" onclick="toggleCollapse('tc-8')">
+      <span class="tc-status status-fail"></span>
+      <span class="tc-name">tst_API_Auth</span>
+      <span class="tc-duration">90.00s</span>
+      <span class="badge badge-fail">FAIL</span>
+      <span class="chevron" id="chev-tc-8">▼</span>
+    </div>
+    <div class="testcase-body collapsible open" id="tc-8">
+      <ul class="msg-list"><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Auth header validated</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item pass">
+        <span class="msg-icon">✓</span>
+        <div class="msg-content">
+          <div class="msg-text">Rate-limit 429 after 100 req</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li><li class="msg-item fail">
+        <span class="msg-icon">✗</span>
+        <div class="msg-content">
+          <div class="msg-text">PATCH /users/profile missing validation</div>
+          
+          
+        </div>
+        <span class="msg-time">15:47:36</span>
+      </li></ul>
+    </div>
+  </div>
+    </div>
+  </div>
+  </div>
 </div>
 
 <script>
 const JSON_FILE = 'results.json';
 
-/* ══ DEMO DATA (fallback) ══ */
+/* ══ DEMO DATA ══ */
 const DEMO = {
   version:{ major:6, minor:7 },
   tests:[{
-    type:'testsuite', name:'suite_Demo',
+    type:'testsuite', name:'suite_CMSearch',
     start: new Date(Date.now()-3600000).toISOString(),
     stop:  new Date(Date.now()-2000000).toISOString(),
     tests:[
-      { type:'testcase', name:'tst_Demo_Login',
+      { type:'testcase', name:'tst_CMSearch_Login',
         start: new Date(Date.now()-3590000).toISOString(), stop: new Date(Date.now()-3400000).toISOString(),
         tests:[
           { type:'msg', result:'PASS', text:'Navigated to login page', time: new Date(Date.now()-3580000).toISOString() },
           { type:'msg', result:'PASS', text:'Credentials entered', time: new Date(Date.now()-3560000).toISOString() },
-          { type:'scriptedVerificationResult', result:'PASS', text:'Login successful (Screenshot in "c:\\report\\passed_1.png")', screenshotUrl:'x-results:suite_Demo/tst_Demo/passedImages/passed_1.png', time: new Date(Date.now()-3530000).toISOString() }
+          { type:'msg', result:'PASS', text:'Screenshot: c:\\report\\suite_CMSearch\\tst_CMSearch\\passedImages\\passed_1.png', time: new Date(Date.now()-3550000).toISOString() },
+          { type:'propertyVerificationResult', result:'PASS', text:'Verify title', objectName:'lblTitle', expectedValue:'CM Search', actualValue:'CM Search', time: new Date(Date.now()-3530000).toISOString() }
+        ]
+      },
+      { type:'testcase', name:'tst_CMSearch_Search',
+        start: new Date(Date.now()-3390000).toISOString(), stop: new Date(Date.now()-3200000).toISOString(),
+        tests:[
+          { type:'feature', name:'Search Feature', tests:[
+            { type:'scenario', name:'Valid search returns results', tests:[
+              { name:'Given search page is open', tests:[{type:'msg',result:'PASS',text:'Page loaded',time:new Date().toISOString()}] },
+              { name:'When user enters keyword "CM"', tests:[{type:'msg',result:'PASS',text:'Keyword typed',time:new Date().toISOString()}] },
+              { name:'Then results should appear', tests:[{type:'msg',result:'FAIL',text:'Expected 5 results, got 3',time:new Date().toISOString()}] }
+            ]},
+            { type:'scenario', name:'Empty search shows warning', tests:[
+              { name:'Given empty input', tests:[{type:'msg',result:'PASS',text:'Input cleared',time:new Date().toISOString()}] },
+              { name:'Then warning banner shown', tests:[{type:'msg',result:'PASS',text:'Banner visible',time:new Date().toISOString()}] }
+            ]}
+          ]},
+          { type:'msg', result:'FAIL', text:'Diff saved: c:\\report\\suite_CMSearch\\tst_CMSearch\\passedImages\\passed_5.png', time: new Date(Date.now()-3210000).toISOString() }
+        ]
+      },
+      { type:'testcase', name:'tst_CMSearch_Export',
+        start: new Date(Date.now()-3190000).toISOString(), stop: new Date(Date.now()-3100000).toISOString(),
+        tests:[
+          { type:'msg', result:'PASS', text:'Export button clicked', time:new Date().toISOString() },
+          { type:'msg', result:'PASS', text:'File download triggered', time:new Date().toISOString() },
+          { type:'msg', result:'ERROR', text:'Validation error: unexpected null value', time:new Date().toISOString() }
+        ]
+      },
+      { type:'testcase', name:'tst_CMSearch_Filter', isSkipped:true,
+        start: new Date(Date.now()-3090000).toISOString(), stop: new Date(Date.now()-3000000).toISOString(),
+        tests:[]
+      }
+    ]
+  },{
+    type:'testsuite', name:'suite_Dashboard',
+    start: new Date(Date.now()-2900000).toISOString(),
+    stop:  new Date(Date.now()-2000000).toISOString(),
+    tests:[
+      { type:'testcase', name:'tst_Dashboard_Load',
+        start: new Date(Date.now()-2890000).toISOString(), stop: new Date(Date.now()-2800000).toISOString(),
+        tests:[
+          { type:'msg', result:'PASS', text:'Dashboard loaded in 1.2s', time:new Date().toISOString() },
+          { type:'msg', result:'PASS', text:'All widgets rendered', time:new Date().toISOString() },
+          { type:'propertyVerificationResult', result:'PASS', text:'Verify widget count', objectName:'widgetContainer', expectedValue:'6', actualValue:'6', time:new Date().toISOString() }
+        ]
+      },
+      { type:'testcase', name:'tst_Dashboard_Charts',
+        start: new Date(Date.now()-2790000).toISOString(), stop: new Date(Date.now()-2700000).toISOString(),
+        tests:[
+          { type:'msg', result:'PASS', text:'Bar chart data correct', time:new Date().toISOString() },
+          { type:'msg', result:'FAIL', text:'Pie chart missing legend label', time:new Date().toISOString() }
+        ]
+      }
+    ]
+  },{
+    type:'testsuite', name:'suite_API',
+    start: new Date(Date.now()-1900000).toISOString(),
+    stop:  new Date(Date.now()-1000000).toISOString(),
+    tests:[
+      { type:'testcase', name:'tst_API_Users',
+        start: new Date(Date.now()-1890000).toISOString(), stop: new Date(Date.now()-1800000).toISOString(),
+        tests:[
+          { type:'msg', result:'PASS', text:'GET /users → 200', time:new Date().toISOString() },
+          { type:'msg', result:'PASS', text:'POST /users creates record', time:new Date().toISOString() },
+          { type:'msg', result:'PASS', text:'DELETE /users removes record', time:new Date().toISOString() }
+        ]
+      },
+      { type:'testcase', name:'tst_API_Auth',
+        start: new Date(Date.now()-1790000).toISOString(), stop: new Date(Date.now()-1700000).toISOString(),
+        tests:[
+          { type:'msg', result:'PASS', text:'Auth header validated', time:new Date().toISOString() },
+          { type:'msg', result:'PASS', text:'Rate-limit 429 after 100 req', time:new Date().toISOString() },
+          { type:'msg', result:'FAIL', text:'PATCH /users/profile missing validation', time:new Date().toISOString() }
         ]
       }
     ]
@@ -326,58 +855,35 @@ function fmtDate(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateS
 function duration(a,b){ if(!a||!b) return ''; const ms=new Date(b)-new Date(a); return ms<1000?ms+'ms':(ms/1000).toFixed(2)+'s'; }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-/* ══ LEAF NODE DETECTION ══
- * Squish BDD JSON uses many container types. A "leaf" is any node that
- * carries an actual test result: msg, scriptedVerificationResult, propertyVerificationResult.
- */
-const LEAF_TYPES = new Set(['msg','scriptedVerificationResult','propertyVerificationResult','screenshot']);
-
-/* Collect all leaf result nodes from any depth of nesting */
-function collectLeaves(nodes){
-  const leaves=[];
-  function walk(arr){
-    if(!Array.isArray(arr)) return;
-    for(const n of arr){
-      if(LEAF_TYPES.has(n.type)) leaves.push(n);
-      if(n.tests) walk(n.tests);
-    }
-  }
-  walk(nodes);
-  return leaves;
-}
-
-/* ══ ANALYSIS — works on deeply nested Squish BDD structures ══ */
+/* ══ ANALYSIS ══ */
 function analyzeTests(tests){
   const s={pass:0,fail:0,skip:0,error:0,log:0,total:0};
-  const leaves=collectLeaves(tests);
-  for(const t of leaves){
-    const r=(t.result||'').toUpperCase();
-    if(r==='PASS'){ s.pass++; s.total++; }
-    else if(r==='FAIL'){ s.fail++; s.total++; }
-    else if(r==='ERROR'){ s.error++; s.total++; }
-    else if(r==='LOG'){ s.log++; s.total++; }
-    else { s.log++; s.total++; }
-  }
-  // Also count explicitly skipped testcases
-  function countSkipped(arr){
-    if(!Array.isArray(arr)) return;
-    for(const n of arr){
-      if(n.isSkipped){ s.skip++; s.total++; }
-      if(n.tests) countSkipped(n.tests);
+  function walk(arr){
+    if(!arr) return;
+    for(const t of arr){
+      if(t.type==='msg'){
+        s.total++;
+        if(t.result==='PASS') s.pass++;
+        else if(t.result==='FAIL') s.fail++;
+        else if(t.result==='ERROR') s.error++;
+        else s.log++;
+      } else if(t.type==='propertyVerificationResult'){
+        s.total++;
+        if(t.result==='PASS') s.pass++; else s.fail++;
+      } else if(t.isSkipped){ s.skip++; s.total++; }
+      if(t.tests) walk(t.tests);
     }
   }
-  countSkipped(tests);
+  walk(tests);
   return s;
 }
 
 function tcStatus(tests){
   const s=analyzeTests(tests);
-  if(s.error>0) return 'fail';
-  if(s.fail>0) return 'fail';
-  if(s.skip>0&&s.pass===0&&s.fail===0) return 'skip';
+  if(s.error>0||s.fail>0) return 'fail';
+  if(s.skip>0&&s.pass===0) return 'skip';
   if(s.pass>0) return 'pass';
-  if(s.log>0) return 'log';
-  return 'skip';
+  return 'log';
 }
 
 /* ══ TOOLTIP ══ */
@@ -424,164 +930,109 @@ function badge(status){
   return `<span class="badge badge-${status}">${labels[status]||status.toUpperCase()}</span>`;
 }
 
-/* ══ IMAGE PATH / SCREENSHOT DETECTION ══
- * Squish puts paths in two places:
- *   1) node.screenshotUrl  e.g. "x-results:suite_CMSearch/tst_CMSearch/passedImages/passed_1.png"
- *   2) inline in node.text  e.g. '(Screenshot in "c:\report\...\passed_1.png")'
- */
+/* ══ IMAGE PATH DETECTION ══ */
 const IMG_RE=/([a-zA-Z]:[\\\/][^\s,;|"'<>]+\.(?:png|jpg|jpeg|gif|bmp|webp)|(?:\.{0,2}[\\\/])[^\s,;|"'<>]+\.(?:png|jpg|jpeg|gif|bmp|webp))/gi;
 
-function resolveScreenshotSrc(node){
-  // Prefer screenshotUrl if present (x-results: scheme → relative path)
-  if(node.screenshotUrl){
-    const url=node.screenshotUrl;
-    if(url.startsWith('x-results:')){
-      // x-results:suite_CMSearch/tst_CMSearch/passedImages/passed_1.png
-      // Resolve relative to results.json location (same folder as index.html)
-      return url.replace(/^x-results:/,'');
-    }
-    return url;
-  }
-  return null;
-}
-
-function buildImgHtml(raw, node){
-  const imgs=[];
-
-  // 1. screenshotUrl from the node itself
-  const ss=resolveScreenshotSrc(node||{});
-  if(ss) imgs.push({src:ss, label:ss});
-
-  // 2. Windows/relative paths embedded in text
-  const found=[...raw.matchAll(IMG_RE)].map(m=>m[1]);
-  for(const p of found){
+function buildImgHtml(raw){
+  const paths=[...raw.matchAll(IMG_RE)].map(m=>m[1]);
+  if(!paths.length) return '';
+  return paths.map(p=>{
     const norm=p.replace(/\\/g,'/');
     const src=/^[a-zA-Z]:\//.test(norm)?'file:///'+norm:norm;
-    imgs.push({src,label:p});
-  }
-
-  if(!imgs.length) return '';
-  return imgs.map(({src,label})=>`<div class="inline-img-wrap">
-    <div class="inline-img-path">📁 ${esc(label)}</div>
-    <img class="inline-img" src="${src}" alt="${esc(label)}" loading="lazy"
-      onclick="openLightbox(this.src,'${esc(label).replace(/'/g,'&#39;')}')"
-      onerror="this.closest('.inline-img-wrap').classList.add('img-broken');this.style.display='none';this.nextElementSibling.style.display='flex';"/>
-    <div class="img-broken-msg" style="display:none">
-      <span>⚠ Image not found</span>
-      <a href="${src}" target="_blank" class="img-open-link">Open path ↗</a>
-    </div>
-  </div>`).join('');
-}
-
-/* ══ RENDER A SINGLE LEAF MESSAGE ══ */
-function renderLeaf(t){
-  // Determine display class from result
-  const r=(t.result||'').toUpperCase();
-  let cls='log', icon='›';
-  if(r==='PASS'){cls='pass';icon='✓';}
-  else if(r==='FAIL'){cls='fail';icon='✗';}
-  else if(r==='ERROR'){cls='error';icon='✗';}
-  else if(r==='LOG'){cls='log';icon='›';}
-
-  const raw=t.text||'';
-  const imgHtml=buildImgHtml(raw,t);
-
-  if(t.type==='propertyVerificationResult'){
-    return `<li class="msg-item ${cls}">
-      <span class="msg-icon">${icon}</span>
-      <div class="msg-content">
-        <div class="msg-text">${esc(raw)}</div>
-        <div class="vp-row">
-          <span class="vp-tag">Object: <strong>${esc(t.objectName||'')}</strong></span>
-          <span class="vp-tag">Expected: <strong>${esc(t.expectedValue||'')}</strong></span>
-          <span class="vp-tag">Actual: <strong>${esc(t.actualValue||'')}</strong></span>
-        </div>
+    return `<div class="inline-img-wrap">
+      <div class="inline-img-path">📁 ${esc(p)}</div>
+      <img class="inline-img" src="${src}" alt="${esc(p)}" loading="lazy"
+        onclick="openLightbox(this.src,'${esc(p).replace(/'/g,'&#39;')}')"
+        onerror="this.closest('.inline-img-wrap').classList.add('img-broken');this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+      <div class="img-broken-msg" style="display:none">
+        <span>⚠ Image not found</span>
+        <a href="${src}" target="_blank" class="img-open-link">Open path ↗</a>
       </div>
-      <span class="msg-time">${fmtTime(t.time)}</span>
-    </li>`;
+    </div>`;
+  }).join('');
+}
+
+/* ══ RENDER MESSAGES ══ */
+function renderMessages(tests){
+  if(!tests||!tests.length) return '';
+  let items='';
+  for(const t of tests){
+    if(t.type==='msg'){
+      const cls=t.result?t.result.toLowerCase():'log';
+      const icon=t.result==='PASS'?'✓':t.result==='FAIL'||t.result==='ERROR'?'✗':t.result==='LOG'?'›':'·';
+      const raw=t.text||'';
+      const imgHtml=buildImgHtml(raw);
+      items+=`<li class="msg-item ${cls}${imgHtml?' has-image':''}">
+        <span class="msg-icon">${icon}</span>
+        <div class="msg-content">
+          ${imgHtml?`<div class="msg-text-row">${esc(raw)}</div>`:`<div class="msg-text">${esc(raw)}</div>`}
+          ${t.detail?`<div class="msg-detail">${esc(t.detail)}</div>`:''}
+          ${imgHtml}
+        </div>
+        <span class="msg-time">${fmtTime(t.time)}</span>
+      </li>`;
+    } else if(t.type==='propertyVerificationResult'){
+      const cls=t.result==='PASS'?'pass':'fail';
+      items+=`<li class="msg-item ${cls}">
+        <span class="msg-icon">${t.result==='PASS'?'✓':'✗'}</span>
+        <div class="msg-content">
+          <div class="msg-text">${esc(t.text||'')}</div>
+          <div class="vp-row">
+            <span class="vp-tag">Object: <strong>${esc(t.objectName||'')}</strong></span>
+            <span class="vp-tag">Expected: <strong>${esc(t.expectedValue||'')}</strong></span>
+            <span class="vp-tag">Actual: <strong>${esc(t.actualValue||'')}</strong></span>
+          </div>
+        </div>
+        <span class="msg-time">${fmtTime(t.time)}</span>
+      </li>`;
+    } else if(t.type==='screenshot'){
+      const fname=(t.uri||'').split('/').pop();
+      items+=`<li class="msg-item screenshot">
+        <span class="msg-icon">📸</span>
+        <div class="msg-content">
+          <div class="msg-text">Screenshot captured</div>
+          <div class="screenshot-badge">🖼 ${esc(fname)}</div>
+        </div>
+        <span class="msg-time">${fmtTime(t.time)}</span>
+      </li>`;
+    }
   }
-
-  return `<li class="msg-item ${cls}${imgHtml?' has-image':''}">
-    <span class="msg-icon">${icon}</span>
-    <div class="msg-content">
-      ${imgHtml?`<div class="msg-text-row">${esc(raw)}</div>`:`<div class="msg-text">${esc(raw)}</div>`}
-      ${t.detail?`<div class="msg-detail">${esc(t.detail)}</div>`:''}
-      ${imgHtml}
-    </div>
-    <span class="msg-time">${fmtTime(t.time)}</span>
-  </li>`;
+  return items?`<ul class="msg-list">${items}</ul>`:'';
 }
 
-/* ══ RENDER STEP (type:'step') — renders its name + its leaf children ══ */
+/* ══ STEPS ══ */
 function renderStep(step){
-  const leaves=collectLeaves(step.tests||[]);
-  const hasErr=leaves.some(m=>m.result==='ERROR'||m.result==='FAIL');
-  const hasPass=leaves.some(m=>m.result==='PASS');
-  let cls='',dot='var(--muted)',icon='·';
-  if(step.isSkipped){cls='step-skip';dot='var(--skip)';icon='○';}
-  else if(hasErr){cls='step-fail';dot='var(--fail)';icon='✗';}
-  else if(hasPass){cls='step-pass';dot='var(--pass)';icon='✓';}
-  else if(leaves.length){icon='›';}
-
-  const errMsgs=leaves.filter(m=>m.result==='ERROR'||m.result==='FAIL')
-    .map(m=>`<div class="step-error-msg">⚠ ${esc(m.text||'')}${m.detail?' — '+esc(m.detail):''}</div>`).join('');
-
-  // Render inline screenshot images for this step's pass results
-  const imgItems=leaves.filter(m=>(m.result==='PASS'||m.result==='LOG')&&(m.screenshotUrl||IMG_RE.test(m.text||'')));
-  const imgs=imgItems.map(m=>{
-    IMG_RE.lastIndex=0;
-    return buildImgHtml(m.text||'',m);
-  }).filter(Boolean).join('');
-
-  return `<div class="step-item ${cls}">
-    <span class="step-dot" style="background:${dot}"></span>
-    <span>${icon} ${esc(step.name||'')}</span>
-  </div>${errMsgs}${imgs?`<div style="padding:4px 22px">${imgs}</div>`:''}`;
+  let cls='step-skip',dot='var(--skip)',icon='○';
+  if(!step.isSkipped){
+    const msgs=step.tests||[];
+    const hasErr=msgs.some(m=>m.result==='ERROR'||m.result==='FAIL');
+    const hasPass=msgs.some(m=>m.result==='PASS');
+    if(hasErr){cls='step-fail';dot='var(--fail)';icon='✗';}
+    else if(hasPass){cls='step-pass';dot='var(--pass)';icon='✓';}
+    else if(msgs.length){icon='›';}
+  }
+  let errMsgs='';
+  (step.tests||[]).forEach(m=>{
+    if(m.result==='ERROR'||m.result==='FAIL')
+      errMsgs+=`<div class="step-error-msg">⚠ ${esc(m.text||'')}${m.detail?' — '+esc(m.detail):''}</div>`;
+  });
+  return `<div class="step-item ${cls}"><span class="step-dot" style="background:${dot}"></span><span>${icon} ${esc(step.name||'')}</span></div>${errMsgs}`;
 }
 
-/* ══ RENDER SCENARIO / ROW ══ */
 function renderScenario(sc){
-  // A scenario or row may contain step nodes or leaf nodes directly
-  const steps=(sc.tests||[]).filter(t=>t.type==='step');
-  const directLeaves=(sc.tests||[]).filter(t=>LEAF_TYPES.has(t.type));
-  const hasErr=collectLeaves(sc.tests||[]).some(m=>m.result==='ERROR'||m.result==='FAIL');
-  const dotColor=hasErr?'var(--fail)':'var(--pass)';
-  const label=sc.name||sc.type||'Scenario';
-  const stepHtml=steps.map(renderStep).join('');
-  const leafHtml=directLeaves.length?`<ul class="msg-list">${directLeaves.map(renderLeaf).join('')}</ul>`:'';
+  const steps=(sc.tests||[]).map(renderStep).join('');
+  const hasErr=(sc.tests||[]).some(s=>(s.tests||[]).some(m=>m.result==='ERROR'||m.result==='FAIL'));
   return `<div class="scenario-block">
-    <div class="scenario-name">
-      <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;display:inline-block"></span>
-      ${esc(label)}
-    </div>
-    ${stepHtml}${leafHtml}
+    <div class="scenario-name"><span style="width:8px;height:8px;border-radius:50%;background:${hasErr?'var(--fail)':'var(--pass)'};flex-shrink:0;display:inline-block"></span>${esc(sc.name||'Scenario')}</div>
+    ${steps}
   </div>`;
 }
 
-/* ══ RENDER SCENARIOOUTLINE (contains rows) ══ */
-function renderScenarioOutline(outline){
-  // Each row is like a scenario
-  const rows=(outline.tests||[]).filter(t=>t.type==='row');
-  if(rows.length) return rows.map(renderScenario).join('');
-  // Fallback: treat as plain scenario
-  return renderScenario(outline);
-}
-
-/* ══ RENDER FEATURE ══ */
 function renderFeature(feat){
-  let inner='';
-  for(const child of (feat.tests||[])){
-    if(child.type==='scenariooutline') inner+=renderScenarioOutline(child);
-    else if(child.type==='scenario') inner+=renderScenario(child);
-    else if(child.type==='row') inner+=renderScenario(child);
-    else if(child.type==='step') inner+=renderStep(child);
-    else if(LEAF_TYPES.has(child.type)){
-      inner+=`<ul class="msg-list">${renderLeaf(child)}</ul>`;
-    }
-  }
+  const scenarios=(feat.tests||[]).filter(t=>t.type==='scenario').map(renderScenario).join('');
   return `<div class="feature-block">
     <div class="feature-header">◈ Feature — ${esc(feat.name||'')}</div>
-    ${inner}
+    ${scenarios}
   </div>`;
 }
 
@@ -592,21 +1043,12 @@ function renderTestCase(tc){
   const id='tc-'+tcCounter;
   const status=tcStatus(tc.tests||[]);
   const dur=duration(tc.start,tc.stop);
-  const st=analyzeTests(tc.tests||[]);
-  const bStatus=st.error>0?'error':(st.fail>0?'fail':status);
-
-  // Build body: features first, then top-level leaf messages
+  const sErr=analyzeTests(tc.tests||[]).error;
   let body='';
-  for(const child of (tc.tests||[])){
-    if(child.type==='feature') body+=renderFeature(child);
-    else if(child.type==='scenariooutline') body+=renderScenarioOutline(child);
-    else if(child.type==='scenario') body+=renderScenario(child);
-    else if(child.type==='step') body+=renderStep(child);
-    else if(LEAF_TYPES.has(child.type)){
-      body+=`<ul class="msg-list">${renderLeaf(child)}</ul>`;
-    }
-  }
-
+  (tc.tests||[]).forEach(child=>{ if(child.type==='feature') body+=renderFeature(child); });
+  const leafMsgs=(tc.tests||[]).filter(t=>t.type==='msg'||t.type==='propertyVerificationResult'||t.type==='screenshot');
+  if(leafMsgs.length) body+=renderMessages(leafMsgs);
+  const bStatus=status==='fail'?(sErr>0?'error':'fail'):status;
   return `<div class="testcase">
     <div class="testcase-header" onclick="toggleCollapse('${id}')">
       <span class="tc-status status-${status}"></span>
@@ -642,7 +1084,6 @@ function renderSuite(suite){
         ${st.fail?`<span class="badge badge-fail">${st.fail} FAIL</span>`:''}
         ${st.error?`<span class="badge badge-error">${st.error} ERR</span>`:''}
         ${st.skip?`<span class="badge badge-skip">${st.skip} SKIP</span>`:''}
-        ${st.log?`<span class="badge badge-log">${st.log} LOG</span>`:''}
       </div>
       <span class="chevron" id="chev-${id}">▼</span>
     </div>
@@ -707,14 +1148,59 @@ function animateDonut(pass,fail,skip,error,total){
   });
 }
 
+/* ══ PIE CHART ══ */
+function buildPie(pass,fail,skip,error,total){
+  if(!total) return '';
+  const cx=95,cy=95,r=88;
+  const slices=[
+    {val:pass,color:'#00e676',label:'Pass'},
+    {val:fail,color:'#ff1744',label:'Fail'},
+    {val:error,color:'#ff5252',label:'Error'},
+    {val:skip,color:'#ffd740',label:'Skip'}
+  ].filter(s=>s.val>0);
+  function p2xy(angle,rad){ return {x:cx+rad*Math.cos((angle-90)*Math.PI/180),y:cy+rad*Math.sin((angle-90)*Math.PI/180)}; }
+  const glowDefs=slices.map((_,i)=>`<filter id="pg${i}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`).join('');
+  let paths='',angle=0;
+  slices.forEach((s,i)=>{
+    const sa=angle,ea=angle+(s.val/total)*360;
+    const sp=p2xy(sa,r),ep=p2xy(ea,r);
+    const large=(ea-sa)>180?1:0;
+    const path=(ea-sa)>=360?`M ${cx} ${cy-r} A ${r} ${r} 0 1 1 ${cx-0.01} ${cy-r} Z`:`M ${cx} ${cy} L ${sp.x} ${sp.y} A ${r} ${r} 0 ${large} 1 ${ep.x} ${ep.y} Z`;
+    const mid=sa+(ea-sa)/2;
+    const lx=cx+(r*0.64)*Math.cos((mid-90)*Math.PI/180);
+    const ly=cy+(r*0.64)*Math.sin((mid-90)*Math.PI/180);
+    const pct=Math.round(s.val/total*100);
+    paths+=`<path class="pie-slice" d="${path}" fill="${s.color}" opacity="0.9" data-label="${s.label}: ${s.val} (${pct}%)" filter="url(#pg${i})" style="animation:pieIn 0.8s cubic-bezier(0.34,1.56,0.64,1) ${i*0.1}s both;transform-origin:${cx}px ${cy}px;"/>`;
+    if(pct>=8) paths+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-family="Space Mono,monospace" font-size="10" font-weight="700" fill="${s.val===pass?'#0a0d14':'#fff'}" pointer-events="none">${pct}%</text>`;
+    angle+=(s.val/total)*360;
+  });
+  paths+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1.5"/>`;
+  const legend=slices.map(s=>`<div class="legend-row">
+    <div class="legend-swatch" style="background:${s.color};border-radius:50%"></div>
+    <div class="legend-name">${s.label}</div>
+    <div class="legend-val" style="color:${s.color}">${s.val}</div>
+    <div class="legend-pct">${Math.round(s.val/total*100)}%</div>
+  </div>`).join('');
+  return `<div class="pie-layout">
+    <div class="pie-wrap">
+      <svg width="190" height="190" viewBox="0 0 190 190" id="pie-svg">
+        <defs>${glowDefs}</defs>${paths}
+      </svg>
+    </div>
+    <div class="chart-legend">${legend}</div>
+  </div>`;
+}
+
 /* ══ LINE GRAPH ══ */
 function buildLineGraph(suites){
   if(!suites||suites.length<2) return '';
   const W=740,H=210,PL=46,PR=22,PT=20,PB=42;
   const iW=W-PL-PR,iH=H-PT-PB;
   const points=suites.map(s=>{
-    const st=analyzeTests(s.tests||[]);
-    return {name:s.name||'Suite',pass:st.pass,fail:st.fail+st.error,skip:st.skip,total:st.pass+st.fail+st.error+st.skip};
+    const tcs=(s.tests||[]).filter(t=>t.type==='testcase');
+    let p=0,f=0,sk=0;
+    tcs.forEach(tc=>{const st=analyzeTests(tc.tests||[]);p+=st.pass;f+=st.fail+st.error;sk+=st.skip;});
+    return {name:s.name||'Suite',pass:p,fail:f,skip:sk,total:p+f+sk};
   });
   const maxVal=Math.max(...points.map(p=>Math.max(p.pass,p.fail,p.skip)),1);
   const n=points.length;
@@ -734,21 +1220,23 @@ function buildLineGraph(suites){
     return `<text class="lc-axis" x="${px(i)}" y="${H-PB+16}" text-anchor="middle">${esc(short)}</text>`;
   }).join('');
 
-  function makeLine(key,cls){
+  function makeLine(key,cls,color){
     if(n===1){
-      return `<circle class="lc-dot lc-dot-${cls}" cx="${px(0)}" cy="${py(points[0][key])}" r="5"/>`;
+      return `<circle class="lc-dot lc-dot-${cls}" cx="${px(0)}" cy="${py(points[0][key])}" r="5">
+        <title>${points[0].name} — ${key}: ${points[0][key]}</title></circle>`;
     }
     const ptStr=points.map((p,i)=>`${px(i)},${py(p[key])}`).join(' ');
     const areaStr=`${px(0)},${py(0)} `+points.map((p,i)=>`${px(i)},${py(p[key])}`).join(' ')+` ${px(n-1)},${py(0)}`;
     const fillCol=cls==='pass'?'rgba(0,230,118,0.07)':cls==='fail'?'rgba(255,23,68,0.07)':'rgba(255,215,64,0.05)';
     const dots=points.map((p,i)=>`<circle class="lc-dot lc-dot-${cls}" cx="${px(i)}" cy="${py(p[key])}" r="4"
-        onmouseenter="showTT(event,'${esc(p.name)}: ${p[key]} ${key}')" onmousemove="moveTT(event)" onmouseleave="hideTT()"/>`).join('');
+        onmouseenter="showTT(event,'${esc(p.name)}: ${p[key]} ${key}')" onmousemove="moveTT(event)" onmouseleave="hideTT()">
+      <title>${p.name} — ${key}: ${p[key]}</title></circle>`).join('');
     return `<polygon points="${areaStr}" fill="${fillCol}" stroke="none"/>
             <polyline class="lc-line lc-line-${cls}" points="${ptStr}" stroke-dasharray="9999" stroke-dashoffset="9999" id="ll-${cls}"/>
             ${dots}`;
   }
 
-  const allLines=makeLine('pass','pass')+makeLine('fail','fail')+makeLine('skip','skip');
+  const allLines=makeLine('pass','pass','var(--pass)')+makeLine('fail','fail','var(--fail)')+makeLine('skip','skip','var(--skip)');
   return `<div class="line-card">
     <div class="line-card-title">◎ Suite-by-Suite Line Graph</div>
     <div class="line-chart-wrap">
@@ -785,16 +1273,10 @@ function renderReport(data){
   const suites=(data.tests||[]).filter(t=>t.type==='testsuite');
   const allTCs=[];
   suites.forEach(s=>(s.tests||[]).forEach(t=>t.type==='testcase'&&allTCs.push(t)));
-
-  // Aggregate counts across all leaves in all suites
-  let totalPass=0,totalFail=0,totalSkip=0,totalError=0,totalLog=0;
-  suites.forEach(s=>{
-    const st=analyzeTests(s.tests||[]);
-    totalPass+=st.pass; totalFail+=st.fail; totalSkip+=st.skip; totalError+=st.error; totalLog+=st.log;
-  });
-  const totalEvents=totalPass+totalFail+totalSkip+totalError+totalLog;
+  let totalPass=0,totalFail=0,totalSkip=0,totalError=0;
+  allTCs.forEach(tc=>{const s=analyzeTests(tc.tests||[]);totalPass+=s.pass;totalFail+=s.fail;totalSkip+=s.skip;totalError+=s.error;});
+  const totalEvents=totalPass+totalFail+totalSkip+totalError;
   const passRate=totalEvents?Math.round(totalPass/totalEvents*100):0;
-
   const startDate=fmtDate(data.tests?.[0]?.start);
   const startTime=fmtTime(data.tests?.[0]?.start);
   const ver=data.version?`v${data.version.major}.${data.version.minor}`:'—';
@@ -805,7 +1287,7 @@ function renderReport(data){
     <div class="stat-card total"><div class="stat-num" id="cnt-total">0</div><div class="stat-label">Total Events</div><div class="stat-bar" id="bar-total"></div></div>
     <div class="stat-card passed"><div class="stat-num" id="cnt-pass">0</div><div class="stat-label">Passed</div><div class="stat-bar" id="bar-pass"></div></div>
     <div class="stat-card failed"><div class="stat-num" id="cnt-fail">0</div><div class="stat-label">Failed</div><div class="stat-bar" id="bar-fail"></div></div>
-    <div class="stat-card skipped"><div class="stat-num" id="cnt-skip">0</div><div class="stat-label">Skipped / Log</div><div class="stat-bar" id="bar-skip"></div></div>
+    <div class="stat-card skipped"><div class="stat-num" id="cnt-skip">0</div><div class="stat-label">Skipped</div><div class="stat-bar" id="bar-skip"></div></div>
     <div class="stat-card errors"><div class="stat-num" id="cnt-error">0</div><div class="stat-label">Errors</div><div class="stat-bar" id="bar-error"></div></div>
   </div>
 
@@ -832,11 +1314,11 @@ function renderReport(data){
   <div class="charts-wrapper">
     <div class="chart-card">
       <div class="chart-card-title">◎ Donut — Result Breakdown</div>
-      ${buildDonut(totalPass,totalFail,totalSkip+totalLog,totalError,totalEvents,passRate)}
+      ${buildDonut(totalPass,totalFail,totalSkip,totalError,totalEvents,passRate)}
     </div>
     <div class="chart-card">
       <div class="chart-card-title">◉ Pie — Distribution</div>
-      ${buildPie(totalPass,totalFail,totalSkip+totalLog,totalError,totalEvents)}
+      ${buildPie(totalPass,totalFail,totalSkip,totalError,totalEvents)}
     </div>
   </div>
 
@@ -855,11 +1337,11 @@ function renderReport(data){
     animateCount(document.getElementById('cnt-total'),totalEvents,100);
     animateCount(document.getElementById('cnt-pass'),totalPass,200);
     animateCount(document.getElementById('cnt-fail'),totalFail,300);
-    animateCount(document.getElementById('cnt-skip'),totalSkip+totalLog,400);
+    animateCount(document.getElementById('cnt-skip'),totalSkip,400);
     animateCount(document.getElementById('cnt-error'),totalError,500);
 
     if(totalEvents){
-      const vals={pass:totalPass,fail:totalFail,skip:totalSkip+totalLog,error:totalError,total:totalEvents};
+      const vals={pass:totalPass,fail:totalFail,skip:totalSkip,error:totalError,total:totalEvents};
       ['pass','fail','skip','error','total'].forEach(k=>{
         const b=document.getElementById('bar-'+k);
         if(b) b.style.width=(vals[k]/totalEvents*100)+'%';
@@ -867,11 +1349,11 @@ function renderReport(data){
       setTimeout(()=>{
         document.getElementById('prog-pass').style.width=(totalPass/totalEvents*100)+'%';
         document.getElementById('prog-fail').style.width=(totalFail/totalEvents*100)+'%';
-        document.getElementById('prog-skip').style.width=((totalSkip+totalLog)/totalEvents*100)+'%';
+        document.getElementById('prog-skip').style.width=(totalSkip/totalEvents*100)+'%';
       },200);
     }
 
-    animateDonut(totalPass,totalFail,totalSkip+totalLog,totalError,totalEvents);
+    animateDonut(totalPass,totalFail,totalSkip,totalError,totalEvents);
     animateLineGraph();
 
     const pieSVG=document.getElementById('pie-svg');
@@ -896,5 +1378,6 @@ async function loadReport(){
 }
 loadReport();
 </script>
-</body>
-</html>
+
+
+</body></html>
