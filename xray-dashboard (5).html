@@ -328,58 +328,6 @@ section[data-testid="stSidebar"]::before {
   opacity: 0.4;
 }
 
-/* ─── Sidebar toggle button — always visible ─── */
-[data-testid="stSidebarCollapseButton"],
-[data-testid="stSidebarCollapsedControl"],
-button[kind="header"],
-[data-testid="collapsedControl"] {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: all !important;
-  background: rgba(13,17,32,0.95) !important;
-  border: 1px solid rgba(139,92,246,0.35) !important;
-  border-radius: 10px !important;
-  color: var(--acid) !important;
-  box-shadow: 0 0 16px rgba(139,92,246,0.3), 0 0 32px rgba(139,92,246,0.1) !important;
-  transition: all 0.25s ease !important;
-  z-index: 999 !important;
-}
-[data-testid="stSidebarCollapseButton"]:hover,
-[data-testid="stSidebarCollapsedControl"]:hover,
-[data-testid="collapsedControl"]:hover {
-  background: rgba(139,92,246,0.15) !important;
-  border-color: var(--acid) !important;
-  box-shadow: 0 0 24px rgba(212,255,71,0.35), 0 0 48px rgba(212,255,71,0.12) !important;
-  transform: scale(1.08) !important;
-}
-[data-testid="stSidebarCollapseButton"] svg,
-[data-testid="stSidebarCollapsedControl"] svg,
-[data-testid="collapsedControl"] svg {
-  fill: var(--acid) !important;
-  color: var(--acid) !important;
-}
-
-/* Collapsed control arrow shown at left edge */
-[data-testid="stSidebarCollapsedControl"] {
-  position: fixed !important;
-  left: 12px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 36px !important;
-  height: 36px !important;
-  align-items: center !important;
-  justify-content: center !important;
-  animation: sidebarPulse 2.5s ease-in-out infinite !important;
-}
-[data-testid="stSidebarCollapsedControl"]:hover {
-  transform: translateY(-50%) scale(1.1) !important;
-}
-@keyframes sidebarPulse {
-  0%,100% { box-shadow: 0 0 10px rgba(139,92,246,0.3), 0 0 20px rgba(139,92,246,0.08); }
-  50%     { box-shadow: 0 0 20px rgba(212,255,71,0.4), 0 0 40px rgba(212,255,71,0.12); }
-}
-
 /* ─── Headings ─── */
 [data-testid="stMarkdownContainer"] h1,
 [data-testid="stMarkdownContainer"] h2,
@@ -572,54 +520,6 @@ button[data-testid="stBaseButton-secondary"]:hover {
   border-radius: 16px !important;
   overflow: hidden !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
-}
-
-/* ─── 3D Chart containers ─── */
-[data-testid="stPyplotRootElement"] {
-  position: relative !important;
-  border-radius: 20px !important;
-  padding: 3px !important;
-  background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(212,255,71,0.12), rgba(0,255,200,0.1)) !important;
-  animation: glowRingPulse 4s ease-in-out infinite !important;
-  margin: 0.5rem 0 !important;
-}
-@keyframes glowRingPulse {
-  0%,100% { box-shadow: 0 0 24px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.06); }
-  50%     { box-shadow: 0 0 48px rgba(212,255,71,0.25), 0 0 100px rgba(139,92,246,0.12); }
-}
-
-[data-testid="stPyplotRootElement"] img {
-  border-radius: 18px !important;
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  background: #080b14 !important;
-  box-shadow:
-    0 0 40px rgba(139,92,246,0.3),
-    0 0 80px rgba(139,92,246,0.12),
-    0 0 120px rgba(212,255,71,0.07),
-    0 28px 80px rgba(0,0,0,0.75) !important;
-  animation: chart3dIn 1s cubic-bezier(0.34,1.56,0.64,1) both, chartFloat 7s ease-in-out infinite !important;
-  transform-origin: center center !important;
-  transition: box-shadow 0.4s ease, transform 0.5s ease !important;
-}
-[data-testid="stPyplotRootElement"] img:hover {
-  box-shadow:
-    0 0 60px rgba(139,92,246,0.45),
-    0 0 120px rgba(212,255,71,0.18),
-    0 0 180px rgba(0,255,200,0.08),
-    0 40px 100px rgba(0,0,0,0.85) !important;
-  transform: rotateX(2deg) rotateY(-1.5deg) scale(1.015) translateY(-6px) !important;
-}
-@keyframes chart3dIn {
-  0%   { opacity:0; transform: perspective(1000px) rotateX(20deg) rotateY(-8deg) scale(0.86) translateY(40px); filter:blur(8px); }
-  55%  { filter:blur(0); }
-  100% { opacity:1; transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0); }
-}
-@keyframes chartFloat {
-  0%,100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
-  25%     { transform: translateY(-5px) rotateX(0.8deg) rotateY(0.3deg); }
-  75%     { transform: translateY(3px) rotateX(-0.4deg) rotateY(-0.2deg); }
 }
 
 /* ─── Success message ─── */
@@ -1130,78 +1030,67 @@ with r2:
 counts = filtered[cat_col].astype(str).value_counts()
 colors = PALETTE[:len(counts)]
 
-def add_bar_glow(ax, x_pos, heights, bar_colors, width=0.55):
-    for xp, h, c in zip(x_pos, heights, bar_colors):
-        for extra_w, alpha in [(0.30, 0.05), (0.18, 0.09), (0.08, 0.14)]:
-            ax.bar(xp, h, color=c, width=width+extra_w,
-                   edgecolor='none', linewidth=0, zorder=1, alpha=alpha)
-
-def add_line_glow(ax, xs, ys, color):
-    for lw, alpha in [(12, 0.03), (7, 0.07), (3.5, 0.14)]:
-        ax.plot(xs, ys, color=color, linewidth=lw, alpha=alpha, zorder=2)
-
-fig, ax = plt.subplots(figsize=(14, 3.6))
+fig, ax = plt.subplots(figsize=(11, 5))
 fig.patch.set_facecolor('#080b14')
 ax.set_facecolor('#0d1120')
+
+# Add subtle gradient background to chart
 ax.set_axisbelow(True)
 
 if chart_type == "Bar":
-    x_pos = list(range(len(counts)))
-    add_bar_glow(ax, x_pos, counts.values, colors)
-    bars = ax.bar(x_pos, counts.values, color=colors, zorder=3, width=0.55, edgecolor='none', linewidth=0)
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(counts.index, rotation=45, ha='right', fontsize=7.5)
-    for b in bars:
-        ax.text(b.get_x()+b.get_width()/2, b.get_height()+0.08,
-                str(int(b.get_height())), ha='center', va='bottom', fontsize=7.5, color='#5a6480', fontfamily='monospace')
-    ax.yaxis.grid(True, zorder=0, alpha=0.3)
-    ax.set_ylabel("Count", fontsize=8, color='#5a6480', labelpad=8)
+    bars = ax.bar(counts.index, counts.values, color=colors, zorder=3, width=0.55,
+                  edgecolor='none', linewidth=0)
+    # Gradient effect: top highlights
+    for i, b in enumerate(bars):
+        ax.text(b.get_x()+b.get_width()/2, b.get_height()+0.1,
+                str(int(b.get_height())),
+                ha='center', va='bottom', fontsize=8, color='#5a6480',
+                fontfamily='monospace')
+    ax.yaxis.grid(True, zorder=0, alpha=0.4)
+    ax.set_ylabel("Count", fontsize=9, color='#5a6480', labelpad=10)
 
 elif chart_type == "Pie":
     wedges, texts, autos = ax.pie(
         counts.values, labels=counts.index, autopct='%1.1f%%', colors=colors,
-        startangle=140, wedgeprops=dict(edgecolor='#080b14', linewidth=2.5),
-        textprops=dict(color='#9aa5be', fontsize=8), radius=0.86)
+        startangle=140,
+        wedgeprops=dict(edgecolor='#080b14', linewidth=3),
+        textprops=dict(color='#9aa5be', fontsize=9)
+    )
     for at in autos:
-        at.set_color('#080b14'); at.set_fontweight('bold'); at.set_fontsize(7.5)
+        at.set_color('#080b14')
+        at.set_fontweight('bold')
+        at.set_fontsize(8)
 
 elif chart_type == "Line":
-    xs = list(range(len(counts)))
-    add_line_glow(ax, xs, counts.values, ACID)
-    ax.plot(xs, counts.values, color=ACID, linewidth=2, marker='o', markersize=7,
-            markerfacecolor=VIOLET, markeredgecolor=ACID, markeredgewidth=1.5, zorder=4)
-    ax.scatter(xs, counts.values, s=160, color=VIOLET, alpha=0.12, zorder=2)
-    ax.scatter(xs, counts.values, s=60, color=ACID, alpha=0.22, zorder=3)
-    ax.fill_between(xs, counts.values, alpha=0.07, color=ACID, zorder=2)
-    ax.set_xticks(xs); ax.set_xticklabels(counts.index, rotation=45, ha='right', fontsize=7.5)
-    ax.yaxis.grid(True, zorder=0, alpha=0.3)
-    ax.set_ylabel("Count", fontsize=8, color='#5a6480')
+    x = range(len(counts))
+    ax.plot(list(x), counts.values, color=ACID, linewidth=2.5,
+            marker='o', markersize=8, markerfacecolor=VIOLET,
+            markeredgecolor=ACID, markeredgewidth=1.5, zorder=4)
+    ax.fill_between(list(x), counts.values, alpha=0.08, color=ACID, zorder=2)
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(counts.index, rotation=45, ha='right')
+    ax.yaxis.grid(True, zorder=0, alpha=0.4)
+    ax.set_ylabel("Count", fontsize=9, color='#5a6480')
 
 elif chart_type == "Horizontal Bar":
-    for i, (label, val) in enumerate(zip(counts.index, counts.values)):
-        c = colors[i % len(colors)]
-        for extra, alpha in [(0.18, 0.05), (0.10, 0.10), (0.04, 0.16)]:
-            ax.barh(label, val, color=c, height=0.55+extra, edgecolor='none', alpha=alpha, zorder=1)
-        ax.barh(label, val, color=c, height=0.55, edgecolor='none', zorder=3)
-    ax.xaxis.grid(True, zorder=0, alpha=0.3)
-    ax.set_xlabel("Count", fontsize=8, color='#5a6480')
-    ax.tick_params(axis='y', labelsize=7.5)
+    bars = ax.barh(counts.index, counts.values, color=colors, zorder=3)
+    ax.xaxis.grid(True, zorder=0, alpha=0.4)
+    ax.set_xlabel("Count", fontsize=9, color='#5a6480')
 
 elif chart_type == "Area":
     xs = list(range(len(counts)))
-    add_line_glow(ax, xs, counts.values, ACID)
-    ax.fill_between(xs, counts.values, alpha=0.26, color=ACID, zorder=2)
-    ax.fill_between(xs, counts.values, alpha=0.06, color=VIOLET, zorder=2)
-    ax.plot(xs, counts.values, color=ACID, linewidth=2, zorder=3)
-    ax.set_xticks(xs); ax.set_xticklabels(counts.index, rotation=45, ha='right', fontsize=7.5)
-    ax.yaxis.grid(True, alpha=0.3)
+    ax.fill_between(xs, counts.values, alpha=0.3, color=ACID, zorder=2)
+    ax.fill_between(xs, counts.values, alpha=0.05, color=VIOLET, zorder=2)
+    ax.plot(xs, counts.values, color=ACID, linewidth=2.5, zorder=3)
+    ax.set_xticks(xs)
+    ax.set_xticklabels(counts.index, rotation=45, ha='right')
+    ax.yaxis.grid(True, alpha=0.4)
 
-ax.set_title(f"{cat_col}  ·  {chart_type}", fontsize=10, pad=12, color='#e8edf8', fontweight='bold')
-plt.xticks(rotation=45, ha='right', fontsize=7.5)
-plt.yticks(fontsize=7.5)
-for spine in ax.spines.values():
-    spine.set_edgecolor('#1e2940')
-plt.tight_layout(pad=1.1)
+ax.set_title(f"{cat_col}  ·  {chart_type}", fontsize=11, pad=18, color='#e8edf8',
+             fontweight='bold', fontstyle='normal')
+plt.xticks(rotation=45, ha='right', fontsize=8)
+plt.yticks(fontsize=8)
+plt.tight_layout(pad=1.5)
 st.pyplot(fig)
 plt.close(fig)
 
@@ -1219,23 +1108,19 @@ for col in filtered.columns:
             f'letter-spacing:2px;text-transform:uppercase;color:#5a6480">{col}</span>',
             unsafe_allow_html=True
         )
-        fig2, ax2 = plt.subplots(figsize=(14, 3.0))
+        fig2, ax2 = plt.subplots(figsize=(8, 3.5))
         fig2.patch.set_facecolor('#080b14')
         ax2.set_facecolor('#0d1120')
-        ax2.set_axisbelow(True)
         colors2 = PALETTE[:len(ac)]
-        x2 = list(range(len(ac)))
-        for xp, h, c in zip(x2, ac.values, colors2):
-            for extra_w, alpha in [(0.28, 0.05), (0.15, 0.09), (0.06, 0.14)]:
-                ax2.bar(xp, h, color=c, width=0.55+extra_w, edgecolor='none', alpha=alpha, zorder=1)
-        ax2.bar(x2, ac.values, color=colors2, zorder=3, width=0.55, edgecolor='none')
-        ax2.set_xticks(x2); ax2.set_xticklabels(ac.index, rotation=45, ha='right', fontsize=7)
-        ax2.yaxis.grid(True, zorder=0, alpha=0.3)
-        ax2.set_title(f"Distribution — {col}", pad=10, color='#9aa5be', fontsize=9)
-        ax2.tick_params(colors='#5a6480', labelsize=7)
+        bars2 = ax2.bar(ac.index, ac.values, color=colors2, zorder=3, width=0.55)
+        ax2.yaxis.grid(True, zorder=0, alpha=0.4)
+        ax2.set_axisbelow(True)
+        ax2.set_title(f"Distribution — {col}", pad=12, color='#9aa5be', fontsize=10)
+        ax2.tick_params(colors='#5a6480', labelsize=8)
         for spine in ax2.spines.values():
             spine.set_edgecolor('#1e2940')
-        plt.tight_layout(pad=1.0)
+        plt.xticks(rotation=45, ha='right', fontsize=8)
+        plt.tight_layout(pad=1.5)
         st.pyplot(fig2)
         plt.close(fig2)
 
