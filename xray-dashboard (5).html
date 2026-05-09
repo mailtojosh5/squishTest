@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"/>
+<title>Xray · CSV Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/stlite.css"/>
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════ */
+:root {
+  --void: #050508;
+  --deep: #080b14;
+  --well: #0d1120;
+  --surface: #121828;
+  --panel: #171f32;
+  --rim: #1e2940;
+  --stroke: rgba(255,255,255,0.06);
+  --stroke2: rgba(255,255,255,0.11);
+  --stroke3: rgba(255,255,255,0.18);
+
+  --acid: #d4ff47;
+  --acid2: #b8e800;
+  --neon: #00ffc8;
+  --violet: #8b5cf6;
+  --violet2: #6d43d4;
+  --magenta: #f046b0;
+  --amber: #ffaa00;
+  --sky: #38c4ff;
+
+  --ink: #e8edf8;
+  --ink2: #9aa5be;
+  --ink3: #5a6480;
+  --ink4: #323a52;
+
+  --ff-head: 'Syne', sans-serif;
+  --ff-body: 'Syne', sans-serif;
+  --ff-mono: 'JetBrains Mono', monospace;
+  --ff-serif: 'Instrument Serif', serif;
+
+  --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
+  --ease-out: cubic-bezier(0.16,1,0.3,1);
+  --r: 16px;
+  --r2: 24px;
+}
+
+/* ═══════════════════════════════════════════════
+   RESET + BASE
+═══════════════════════════════════════════════ */
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0 }
+
+html, body {
+  background: var(--void) !important;
+  color: var(--ink);
+  font-family: var(--ff-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════
+   CANVAS BACKGROUND LAYER
+═══════════════════════════════════════════════ */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════
+   GRID + NOISE OVERLAY
+═══════════════════════════════════════════════ */
+#grid-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(212,255,71,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,255,71,0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* ═══════════════════════════════════════════════
+   FLOATING ORBS
+═══════════════════════════════════════════════ */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  opacity: 0;
+  animation: orbIn 2s var(--ease-out) forwards, drift linear infinite;
+}
+.orb-a {
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%);
+  top: -200px; left: -200px;
+  animation-delay: 0.2s, 2.2s;
+  animation-duration: 2s, 28s;
+}
+.orb-b {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(212,255,71,0.13) 0%, transparent 70%);
+  bottom: -150px; right: -100px;
+  animation-delay: 0.5s, 2.5s;
+  animation-duration: 2s, 22s;
+  animation-direction: normal, reverse;
+}
+.orb-c {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(0,255,200,0.08) 0%, transparent 70%);
+  top: 50%; left: 55%;
+  animation-delay: 0.8s, 2.8s;
+  animation-duration: 2s, 35s;
+}
+@keyframes orbIn { to { opacity: 1 } }
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1) }
+  25%      { transform: translate(30px,-40px) scale(1.05) }
+  50%      { transform: translate(-20px,30px) scale(0.96) }
+  75%      { transform: translate(40px,20px) scale(1.03) }
+}
+
+/* ═══════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════ */
+#topbar {
+  position: relative;
+  z-index: 100;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 20px;
+  background: rgba(5,5,8,0.7);
+  backdrop-filter: blur(32px) saturate(1.6);
+  border-bottom: 1px solid var(--stroke);
+  flex-shrink: 0;
+  opacity: 0;
+  transform: translateY(-100%);
+  animation: barDown 0.8s var(--ease-out) 0.3s forwards;
+}
+
+/* Animated accent line */
+#topbar::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--violet) 20%,
+    var(--acid) 50%,
+    var(--neon) 80%,
+    transparent 100%);
+  opacity: 0.6;
+  background-size: 200% 100%;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes barDown { to { opacity:1; transform:translateY(0) } }
+@keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+/* Logo */
+.logo-gem {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--violet2), var(--acid));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(139,92,246,0.4);
+}
+.logo-gem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(from 0deg, transparent 55%, rgba(255,255,255,0.3) 65%, transparent 75%);
+  animation: gemSpin 3s linear infinite;
+}
+.logo-gem svg { position: relative; z-index: 1 }
+@keyframes gemSpin { to { transform: rotate(360deg) } }
+
+.logo-text {
+  font-family: var(--ff-head);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #fff 30%, var(--acid));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bar-divider { width: 1px; height: 24px; background: var(--stroke2) }
+
+.bar-label {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--stroke);
+  border-radius: 100px;
+  padding: 4px 12px;
+}
+
+.bar-spacer { flex: 1 }
+
+/* Status pills */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid;
+  opacity: 0;
+  animation: pillPop 0.5s var(--ease-spring) forwards;
+}
+.pill-green {
+  background: rgba(0,255,200,0.06);
+  color: var(--neon);
+  border-color: rgba(0,255,200,0.2);
+  animation-delay: 0.7s;
+}
+.pill-violet {
+  background: rgba(139,92,246,0.06);
+  color: #a78bfa;
+  border-color: rgba(139,92,246,0.2);
+  animation-delay: 0.85s;
+}
+.pill-dim {
+  background: rgba(90,100,128,0.06);
+  color: var(--ink3);
+  border-color: rgba(90,100,128,0.15);
+  animation-delay: 1s;
+}
+.pill-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes pillPop { from { opacity:0; transform:scale(0.6) translateY(4px) } to { opacity:1; transform:scale(1) translateY(0) } }
+@keyframes blink { 0%,100% { opacity:0.3 } 50% { opacity:1 } }
+
+/* ═══════════════════════════════════════════════
+   CORNER DECORATIONS
+═══════════════════════════════════════════════ */
+.corner-dec {
+  position: fixed;
+  width: 28px; height: 28px;
+  z-index: 50;
+  opacity: 0;
+  animation: fadeIn 0.5s ease 1.2s forwards;
+}
+@keyframes fadeIn { to { opacity:0.5 } }
+.c-tl { top:76px; left:16px; border-top:1.5px solid var(--acid); border-left:1.5px solid var(--acid) }
+.c-tr { top:76px; right:16px; border-top:1.5px solid var(--acid); border-right:1.5px solid var(--acid) }
+.c-bl { bottom:44px; left:16px; border-bottom:1.5px solid var(--acid); border-left:1.5px solid var(--acid) }
+.c-br { bottom:44px; right:16px; border-bottom:1.5px solid var(--acid); border-right:1.5px solid var(--acid) }
+
+/* ═══════════════════════════════════════════════
+   MAIN CONTENT AREA
+═══════════════════════════════════════════════ */
+#root {
+  position: relative;
+  z-index: 10;
+  min-height: calc(100vh - 100px);
+}
+
+/* ═══════════════════════════════════════════════
+   STREAMLIT RESETS — DEEP DARK
+═══════════════════════════════════════════════ */
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+[data-testid="stMainBlockContainer"],
+[data-testid="stVerticalBlock"],
+[data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stHorizontalBlock"],
+[data-testid="stColumn"],
+[data-testid="stElementContainer"],
+.block-container,
+.appview-container,
+.withScreencast,
+section[data-testid="stMain"],
+.st-emotion-cache-1r4qj8v,
+.st-emotion-cache-bm2z3a,
+.st-emotion-cache-zy6yx3,
+.st-emotion-cache-1yiq2ps {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.stApp { background: transparent !important }
+.stApp > header, .stDeployButton, [data-testid="stHeader"] { display: none !important }
+
+.block-container {
+  padding: 2.5rem 3rem 5rem !important;
+  max-width: 100% !important;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+  background: rgba(8,11,20,0.96) !important;
+  border-right: 1px solid var(--stroke) !important;
+  backdrop-filter: blur(20px) !important;
+}
+section[data-testid="stSidebar"]::before {
+  content: '';
+  position: absolute;
+  top: 0; right: -1px; bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--violet), var(--acid), transparent);
+  opacity: 0.4;
+}
+
+/* ─── Sidebar toggle button — always visible ─── */
+[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapsedControl"],
+button[kind="header"],
+[data-testid="collapsedControl"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: all !important;
+  background: rgba(13,17,32,0.95) !important;
+  border: 1px solid rgba(139,92,246,0.35) !important;
+  border-radius: 10px !important;
+  color: var(--acid) !important;
+  box-shadow: 0 0 16px rgba(139,92,246,0.3), 0 0 32px rgba(139,92,246,0.1) !important;
+  transition: all 0.25s ease !important;
+  z-index: 999 !important;
+}
+[data-testid="stSidebarCollapseButton"]:hover,
+[data-testid="stSidebarCollapsedControl"]:hover,
+[data-testid="collapsedControl"]:hover {
+  background: rgba(139,92,246,0.15) !important;
+  border-color: var(--acid) !important;
+  box-shadow: 0 0 24px rgba(212,255,71,0.35), 0 0 48px rgba(212,255,71,0.12) !important;
+  transform: scale(1.08) !important;
+}
+[data-testid="stSidebarCollapseButton"] svg,
+[data-testid="stSidebarCollapsedControl"] svg,
+[data-testid="collapsedControl"] svg {
+  fill: var(--acid) !important;
+  color: var(--acid) !important;
+}
+
+/* Collapsed control arrow shown at left edge */
+[data-testid="stSidebarCollapsedControl"] {
+  position: fixed !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 36px !important;
+  height: 36px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: sidebarPulse 2.5s ease-in-out infinite !important;
+}
+[data-testid="stSidebarCollapsedControl"]:hover {
+  transform: translateY(-50%) scale(1.1) !important;
+}
+@keyframes sidebarPulse {
+  0%,100% { box-shadow: 0 0 10px rgba(139,92,246,0.3), 0 0 20px rgba(139,92,246,0.08); }
+  50%     { box-shadow: 0 0 20px rgba(212,255,71,0.4), 0 0 40px rgba(212,255,71,0.12); }
+}
+
+/* ─── Headings ─── */
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3 {
+  color: var(--ink) !important;
+  font-family: var(--ff-head) !important;
+}
+[data-testid="stMarkdownContainer"] p {
+  color: var(--ink2) !important;
+}
+
+/* ─── File uploader ─── */
+[data-testid="stFileUploader"] > section,
+[data-testid="stFileUploaderDropzone"] {
+  border: 1.5px dashed rgba(139,92,246,0.25) !important;
+  background: rgba(8,11,20,0.8) !important;
+  border-radius: 20px !important;
+  transition: all 0.4s var(--ease-spring) !important;
+  backdrop-filter: blur(16px) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+[data-testid="stFileUploader"] > section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(139,92,246,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+[data-testid="stFileUploader"] > section:hover {
+  border-color: rgba(212,255,71,0.5) !important;
+  background: rgba(212,255,71,0.03) !important;
+  transform: translateY(-4px) scale(1.005) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,255,71,0.1), inset 0 1px 0 rgba(212,255,71,0.08) !important;
+}
+[data-testid="stFileUploaderDropzoneInstructions"] *,
+[data-testid="stFileUploader"] > section * { color: var(--ink3) !important }
+[data-testid="stFileUploaderFile"] { background: rgba(13,17,32,0.9) !important }
+[data-testid="stFileUploaderFileName"] { color: var(--ink) !important }
+
+/* ─── Browse / secondary buttons ─── */
+button[data-testid="stBaseButton-secondary"] {
+  background: rgba(5,5,8,0.9) !important;
+  color: var(--ink2) !important;
+  border: 1px solid var(--stroke2) !important;
+  border-radius: 10px !important;
+  font-family: var(--ff-body) !important;
+  transition: all 0.2s ease !important;
+}
+button[data-testid="stBaseButton-secondary"]:hover {
+  background: rgba(139,92,246,0.08) !important;
+  border-color: rgba(139,92,246,0.4) !important;
+  color: var(--ink) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ─── Metrics ─── */
+[data-testid="metric-container"] {
+  background: linear-gradient(135deg, rgba(13,17,32,0.95), rgba(8,11,20,0.9)) !important;
+  border: 1px solid var(--stroke) !important;
+  border-radius: 18px !important;
+  padding: 1.2rem 1.4rem !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-spring), box-shadow 0.3s ease !important;
+  animation: metricIn 0.5s var(--ease-out) both;
+  backdrop-filter: blur(20px) !important;
+}
+[data-testid="metric-container"]::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212,255,71,0.6), transparent);
+  animation: scanLine 4s ease-in-out infinite;
+}
+[data-testid="metric-container"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(139,92,246,0.06), transparent 60%);
+  pointer-events: none;
+}
+@keyframes scanLine { 0%,100% { opacity:0.2 } 50% { opacity:1 } }
+@keyframes metricIn { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+[data-testid="metric-container"]:hover {
+  transform: translateY(-6px) scale(1.03) !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,255,71,0.15) !important;
+}
+[data-testid="stMetricLabel"] p {
+  font-family: var(--ff-mono) !important;
+  font-size: 9px !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  color: var(--ink4) !important;
+}
+[data-testid="stMetricValue"],
+[data-testid="stMetricValue"] div {
+  font-family: var(--ff-head) !important;
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  color: var(--acid) !important;
+  background: transparent !important;
+  animation: valPop 0.7s var(--ease-spring) both;
+}
+@keyframes valPop { from { opacity:0; transform:scale(0.7) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
+
+/* ─── Primary buttons ─── */
+.stButton > button {
+  background: linear-gradient(135deg, rgba(212,255,71,0.08), rgba(139,92,246,0.08)) !important;
+  color: var(--ink) !important;
+  border: 1px solid rgba(212,255,71,0.22) !important;
+  border-radius: 12px !important;
+  font-family: var(--ff-body) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 0.6rem 1.5rem !important;
+  letter-spacing: 0.3px !important;
+  transition: all 0.25s ease !important;
+  backdrop-filter: blur(8px) !important;
+}
+.stButton > button:hover {
+  background: linear-gradient(135deg, rgba(212,255,71,0.16), rgba(139,92,246,0.16)) !important;
+  border-color: rgba(212,255,71,0.55) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 40px rgba(212,255,71,0.12), 0 0 0 1px rgba(212,255,71,0.1) !important;
+  color: var(--acid) !important;
+}
+[data-testid="stDownloadButton"] > button {
+  background: linear-gradient(135deg, rgba(0,255,200,0.08), rgba(212,255,71,0.05)) !important;
+  border-color: rgba(0,255,200,0.25) !important;
+  color: var(--neon) !important;
+}
+[data-testid="stDownloadButton"] > button:hover {
+  background: linear-gradient(135deg, rgba(0,255,200,0.16), rgba(212,255,71,0.1)) !important;
+  border-color: rgba(0,255,200,0.5) !important;
+  box-shadow: 0 10px 40px rgba(0,255,200,0.12) !important;
+}
+
+/* ─── Select / multiselect ─── */
+[data-testid="stSelectbox"] > div > div {
+  background: var(--well) !important;
+  border-color: var(--rim) !important;
+  color: var(--ink) !important;
+  border-radius: 12px !important;
+}
+[data-testid="stMultiSelect"] > div {
+  background: var(--well) !important;
+  border-color: var(--rim) !important;
+  border-radius: 12px !important;
+}
+
+/* ─── Radio buttons ─── */
+[data-testid="stRadio"] > div {
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+[data-testid="stRadio"] label {
+  background: rgba(5,5,8,0.9) !important;
+  border: 1px solid var(--stroke) !important;
+  border-radius: 12px !important;
+  padding: 6px 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: var(--ink3) !important;
+  backdrop-filter: blur(8px) !important;
+}
+[data-testid="stRadio"] label:hover {
+  border-color: rgba(212,255,71,0.4) !important;
+  color: var(--acid) !important;
+  background: rgba(212,255,71,0.04) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ─── Alerts ─── */
+[data-testid="stAlert"] {
+  border-radius: 16px !important;
+  border-left-width: 3px !important;
+  background: rgba(139,92,246,0.06) !important;
+  border-color: var(--violet) !important;
+  font-size: 13px !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* ─── Dataframe ─── */
+[data-testid="stDataFrame"] {
+  border: 1px solid var(--stroke) !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
+}
+
+/* ─── 3D Chart containers ─── */
+[data-testid="stPyplotRootElement"] {
+  position: relative !important;
+  border-radius: 20px !important;
+  padding: 3px !important;
+  background: linear-gradient(135deg, rgba(139,92,246,0.25), rgba(212,255,71,0.12), rgba(0,255,200,0.1)) !important;
+  animation: glowRingPulse 4s ease-in-out infinite !important;
+  margin: 0.5rem 0 !important;
+}
+@keyframes glowRingPulse {
+  0%,100% { box-shadow: 0 0 24px rgba(139,92,246,0.2), 0 0 60px rgba(139,92,246,0.06); }
+  50%     { box-shadow: 0 0 48px rgba(212,255,71,0.25), 0 0 100px rgba(139,92,246,0.12); }
+}
+
+[data-testid="stPyplotRootElement"] img {
+  border-radius: 18px !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  background: #080b14 !important;
+  box-shadow:
+    0 0 40px rgba(139,92,246,0.3),
+    0 0 80px rgba(139,92,246,0.12),
+    0 0 120px rgba(212,255,71,0.07),
+    0 28px 80px rgba(0,0,0,0.75) !important;
+  animation: chart3dIn 1s cubic-bezier(0.34,1.56,0.64,1) both, chartFloat 7s ease-in-out infinite !important;
+  transform-origin: center center !important;
+  transition: box-shadow 0.4s ease, transform 0.5s ease !important;
+}
+[data-testid="stPyplotRootElement"] img:hover {
+  box-shadow:
+    0 0 60px rgba(139,92,246,0.45),
+    0 0 120px rgba(212,255,71,0.18),
+    0 0 180px rgba(0,255,200,0.08),
+    0 40px 100px rgba(0,0,0,0.85) !important;
+  transform: rotateX(2deg) rotateY(-1.5deg) scale(1.015) translateY(-6px) !important;
+}
+@keyframes chart3dIn {
+  0%   { opacity:0; transform: perspective(1000px) rotateX(20deg) rotateY(-8deg) scale(0.86) translateY(40px); filter:blur(8px); }
+  55%  { filter:blur(0); }
+  100% { opacity:1; transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1) translateY(0); }
+}
+@keyframes chartFloat {
+  0%,100% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+  25%     { transform: translateY(-5px) rotateX(0.8deg) rotateY(0.3deg); }
+  75%     { transform: translateY(3px) rotateX(-0.4deg) rotateY(-0.2deg); }
+}
+
+/* ─── Success message ─── */
+.st-success, [data-testid="stAlert"][kind="success"] {
+  background: rgba(0,255,200,0.05) !important;
+  border-color: var(--neon) !important;
+}
+
+/* ─── Sidebar widgets ─── */
+section[data-testid="stSidebar"] [data-testid="stSelectbox"] > div > div {
+  background: rgba(13,17,32,0.9) !important;
+  border-color: var(--rim) !important;
+}
+
+/* ─── Divider ─── */
+hr {
+  border: none !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, var(--stroke2), transparent) !important;
+  margin: 1.5rem 0 !important;
+}
+
+/* ═══════════════════════════════════════════════
+   LOADING SCREEN
+═══════════════════════════════════════════════ */
+#loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--void);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.8rem;
+  transition: opacity 1s ease, visibility 1s ease;
+}
+#loading.gone { opacity:0; visibility:hidden }
+
+.load-ring {
+  width: 72px; height: 72px;
+  position: relative;
+  animation: spin 1.4s linear infinite;
+}
+.load-ring::before,
+.load-ring::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+}
+.load-ring::before {
+  inset: 0;
+  border-top-color: var(--violet);
+  border-right-color: var(--acid);
+  animation: none;
+}
+.load-ring::after {
+  inset: 10px;
+  border-bottom-color: var(--neon);
+  border-left-color: var(--magenta);
+  animation: spin 2.1s linear infinite reverse;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+
+.load-wordmark {
+  font-family: var(--ff-head);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, var(--ink), var(--acid));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity:0.6 } 50% { opacity:1 } }
+
+.load-sub {
+  font-family: var(--ff-mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-top: -1rem;
+}
+
+.load-progress {
+  width: 280px;
+  height: 2px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.load-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--violet), var(--acid), var(--neon));
+  animation: barFill 6s var(--ease-out) 0.5s forwards;
+  background-size: 200% 100%;
+  animation: barFill 6s ease 0.5s forwards, barShimmer 2s linear infinite;
+}
+@keyframes barFill { to { width: 100% } }
+@keyframes barShimmer { 0% { background-position:200% 0 } 100% { background-position:-200% 0 } }
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+#footer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 100;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 24px;
+  background: rgba(5,5,8,0.85);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--stroke);
+  opacity: 0;
+  animation: fadeIn 0.6s ease 1.4s forwards;
+}
+#footer::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--violet), transparent);
+  opacity: 0.3;
+}
+.fi {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+.fi-dot { width:3px; height:3px; border-radius:50%; background:var(--ink4) }
+.fi-spacer { flex:1 }
+.fi-ver {
+  font-family: var(--ff-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink4);
+  background: rgba(212,255,71,0.06);
+  border: 1px solid rgba(212,255,71,0.1);
+  border-radius: 100px;
+  padding: 2px 8px;
+}
+
+/* ═══════════════════════════════════════════════
+   SCANLINES
+═══════════════════════════════════════════════ */
+#scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0,0,0,0.015) 3px,
+    rgba(0,0,0,0.015) 4px
+  );
+  opacity: 0.5;
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="load-ring"></div>
+  <div class="load-wordmark">Xray CSV</div>
+  <div class="load-sub">Initialising WebAssembly Runtime</div>
+  <div class="load-progress"><div class="load-bar"></div></div>
+</div>
+
+<!-- Background -->
+<canvas id="bg-canvas"></canvas>
+<div id="grid-overlay"></div>
+<div id="scanlines"></div>
+
+<!-- Orbs -->
+<div class="orb orb-a"></div>
+<div class="orb orb-b"></div>
+<div class="orb orb-c"></div>
+
+<!-- Corner decorations -->
+<div class="corner-dec c-tl"></div>
+<div class="corner-dec c-tr"></div>
+<div class="corner-dec c-bl"></div>
+<div class="corner-dec c-br"></div>
+
+<!-- Topbar -->
+<div id="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo-gem">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 2L16 6.5V11.5L9 16L2 11.5V6.5L9 2Z" fill="white" fill-opacity="0.85"/>
+        <path d="M9 5.5L13 8V10L9 12.5L5 10V8L9 5.5Z" fill="#d4ff47"/>
+      </svg>
+    </div>
+    <span class="logo-text">Xray CSV</span>
+  </div>
+  <div class="bar-divider"></div>
+  <div class="bar-label">Intelligence Dashboard</div>
+  <div class="bar-spacer"></div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="pill pill-green"><span class="pill-dot"></span>Live</span>
+    <span class="pill pill-violet"><span class="pill-dot"></span>Charts</span>
+    <span class="pill pill-dim"><span class="pill-dot"></span>Pandas</span>
+  </div>
+</div>
+
+<!-- App root -->
+<div id="root"></div>
+
+<!-- Footer -->
+<div id="footer">
+  <div class="fi"><div class="fi-dot"></div>Xray Dashboard</div>
+  <div class="fi"><div class="fi-dot"></div>stlite · WebAssembly</div>
+  <div class="fi"><div class="fi-dot"></div>Pandas · Matplotlib</div>
+  <div class="fi-spacer"></div>
+  <div class="fi-ver">v4.0</div>
+</div>
+
+<!-- Particle canvas script -->
+<script>
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function randomParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      size: Math.random() * 1.5 + 0.3,
+      alpha: Math.random() * 0.4 + 0.05,
+      hue: Math.random() > 0.6 ? 80 : (Math.random() > 0.5 ? 265 : 170),
+    };
+  }
+
+  function init() {
+    resize();
+    particles = Array.from({length: 80}, randomParticle);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W;
+      if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H;
+      if (p.y > H) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue},100%,70%,${p.alpha})`;
+      ctx.fill();
+    });
+
+    // Draw soft connection lines
+    particles.forEach((a, i) => {
+      particles.slice(i+1).forEach(b => {
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(139,92,246,${0.06 * (1 - d/120)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+      });
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  init();
+  draw();
+})();
+</script>
+
+<!-- Streamlit / stlite -->
+<script type="module">
+import { mount } from "https://cdn.jsdelivr.net/npm/@stlite/browser@0.85.1/build/stlite.js";
+
+const APP = `
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.patheffects as pe
+from io import StringIO
+import numpy as np
+
+# ── Matplotlib theme ────────────────────────────────────────────
+mpl.rcParams.update({
+    'figure.facecolor':  '#080b14',
+    'axes.facecolor':    '#0d1120',
+    'axes.edgecolor':    '#1e2940',
+    'axes.labelcolor':   '#9aa5be',
+    'xtick.color':       '#5a6480',
+    'ytick.color':       '#5a6480',
+    'text.color':        '#e8edf8',
+    'grid.color':        '#1e2940',
+    'grid.linestyle':    '--',
+    'grid.linewidth':    0.5,
+    'grid.alpha':        0.6,
+    'legend.facecolor':  '#0d1120',
+    'legend.edgecolor':  '#1e2940',
+    'font.family':       'monospace',
+    'axes.spines.top':   False,
+    'axes.spines.right': False,
+})
+
+ACID   = '#d4ff47'
+VIOLET = '#8b5cf6'
+NEON   = '#00ffc8'
+MAGENTA= '#f046b0'
+AMBER  = '#ffaa00'
+SKY    = '#38c4ff'
+PALETTE = [ACID, VIOLET, NEON, MAGENTA, AMBER, SKY, '#a78bfa', '#34d399']
+
+st.set_page_config(page_title='Xray CSV Intelligence', layout='wide')
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+body,.stApp,
+[data-testid="stAppViewContainer"],[data-testid="stMain"],
+[data-testid="stMainBlockContainer"],.block-container,
+.appview-container,.withScreencast,section.main {
+  background:transparent!important;
+  background-color:transparent!important;
+}
+
+h1,h2,h3 {
+  color:#e8edf8!important;
+  font-family:'Syne',sans-serif!important;
+  font-weight:800!important;
+  letter-spacing:-0.02em!important;
+}
+
+[data-testid="stSidebar"] { background:rgba(8,11,20,0.96)!important }
+[data-testid="stSidebar"] * { color:#e8edf8 }
+
+.stMarkdown p { color:#9aa5be!important }
+
+.sec-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #5a6480;
+  margin: 1.5rem 0 0.75rem;
+}
+.sec-label::before {
+  content: '';
+  display: block;
+  width: 24px;
+  height: 1px;
+  background: linear-gradient(90deg, #8b5cf6, #d4ff47);
+}
+.sec-title {
+  display: block;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #e8edf8;
+  margin-bottom: 1rem;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  text-align: center;
+  gap: 1rem;
+  animation: fadeUp .8s ease both;
+}
+.empty-glyph {
+  font-size: 3.5rem;
+  opacity: 0.15;
+  animation: float 4s ease-in-out infinite;
+}
+.empty-head {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #323a52;
+}
+.empty-body {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #1e2940;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+</style>
+""", unsafe_allow_html=True)
+
+# ── Sidebar ─────────────────────────────────────────────────────
+st.sidebar.markdown("## Configuration")
+uploaded_file = st.sidebar.file_uploader("Upload CSV", type=["csv"])
+separator = st.sidebar.selectbox("Separator", [";", ",", "|", "\\t"], index=0)
+st.sidebar.markdown("---")
+st.sidebar.markdown(
+    '<div style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:2px;'
+    'text-transform:uppercase;color:#323a52">Xray CSV Intelligence · v4.0</div>',
+    unsafe_allow_html=True
+)
+
+st.title("CSV Intelligence")
+st.markdown("Upload any Xray export and explore your test data instantly.")
+
+def load_data(f, sep):
+    try:
+        content = f.read().decode("utf-8")
+        return pd.read_csv(StringIO(content), sep=sep)
+    except Exception as e:
+        st.error(f"Load error: {e}")
+        return None
+
+if not uploaded_file:
+    st.markdown(
+        '<div class="empty-state">'
+        '<div class="empty-glyph">◈</div>'
+        '<div class="empty-head">No data loaded</div>'
+        '<div class="empty-body">Upload a CSV from the sidebar to begin</div>'
+        '</div>',
+        unsafe_allow_html=True
+    )
+    st.stop()
+
+df = load_data(uploaded_file, separator)
+if df is None:
+    st.stop()
+
+st.success("CSV loaded successfully")
+
+# ── Raw data ─────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="sec-label">Dataset</div><span class="sec-title">Raw Data</span>', unsafe_allow_html=True)
+st.dataframe(df, use_container_width=True)
+
+# ── Metrics ──────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="sec-label">Overview</div><span class="sec-title">Summary Statistics</span>', unsafe_allow_html=True)
+c1,c2,c3,c4 = st.columns(4)
+c1.metric("Total Rows", f"{len(df):,}")
+c2.metric("Columns", len(df.columns))
+c3.metric("Missing Values", int(df.isnull().sum().sum()))
+c4.metric("Duplicates", int(df.duplicated().sum()))
+
+# ── Filters ──────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="sec-label">Query</div><span class="sec-title">Data Filters</span>', unsafe_allow_html=True)
+filter_cols = st.multiselect("Filter by columns", df.columns.tolist())
+filtered = df.copy()
+for col in filter_cols:
+    vals = filtered[col].dropna().astype(str).unique().tolist()
+    sel = st.multiselect(f"  ↳  {col}", vals, default=vals)
+    filtered = filtered[filtered[col].astype(str).isin(sel)]
+
+st.markdown(
+    f'<span style="font-family:JetBrains Mono,monospace;font-size:12px;color:#5a6480">'
+    f'<span style="color:#d4ff47;font-weight:700">{len(filtered):,}</span> rows after filtering'
+    f'</span>',
+    unsafe_allow_html=True
+)
+st.dataframe(filtered, use_container_width=True)
+
+# ── Chart generator ───────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="sec-label">Visualisation</div><span class="sec-title">Chart Generator</span>', unsafe_allow_html=True)
+
+r1, r2 = st.columns([2,1])
+with r1:
+    chart_type = st.radio("Chart type", ["Bar","Pie","Line","Horizontal Bar","Area"], horizontal=True)
+with r2:
+    cat_col = st.selectbox("Category column", filtered.columns.tolist())
+
+counts = filtered[cat_col].astype(str).value_counts()
+colors = PALETTE[:len(counts)]
+
+def add_bar_glow(ax, x_pos, heights, bar_colors, width=0.55):
+    for xp, h, c in zip(x_pos, heights, bar_colors):
+        for extra_w, alpha in [(0.30, 0.05), (0.18, 0.09), (0.08, 0.14)]:
+            ax.bar(xp, h, color=c, width=width+extra_w,
+                   edgecolor='none', linewidth=0, zorder=1, alpha=alpha)
+
+def add_line_glow(ax, xs, ys, color):
+    for lw, alpha in [(12, 0.03), (7, 0.07), (3.5, 0.14)]:
+        ax.plot(xs, ys, color=color, linewidth=lw, alpha=alpha, zorder=2)
+
+fig, ax = plt.subplots(figsize=(14, 3.6))
+fig.patch.set_facecolor('#080b14')
+ax.set_facecolor('#0d1120')
+ax.set_axisbelow(True)
+
+if chart_type == "Bar":
+    x_pos = list(range(len(counts)))
+    add_bar_glow(ax, x_pos, counts.values, colors)
+    bars = ax.bar(x_pos, counts.values, color=colors, zorder=3, width=0.55, edgecolor='none', linewidth=0)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(counts.index, rotation=45, ha='right', fontsize=7.5)
+    for b in bars:
+        ax.text(b.get_x()+b.get_width()/2, b.get_height()+0.08,
+                str(int(b.get_height())), ha='center', va='bottom', fontsize=7.5, color='#5a6480', fontfamily='monospace')
+    ax.yaxis.grid(True, zorder=0, alpha=0.3)
+    ax.set_ylabel("Count", fontsize=8, color='#5a6480', labelpad=8)
+
+elif chart_type == "Pie":
+    wedges, texts, autos = ax.pie(
+        counts.values, labels=counts.index, autopct='%1.1f%%', colors=colors,
+        startangle=140, wedgeprops=dict(edgecolor='#080b14', linewidth=2.5),
+        textprops=dict(color='#9aa5be', fontsize=8), radius=0.86)
+    for at in autos:
+        at.set_color('#080b14'); at.set_fontweight('bold'); at.set_fontsize(7.5)
+
+elif chart_type == "Line":
+    xs = list(range(len(counts)))
+    add_line_glow(ax, xs, counts.values, ACID)
+    ax.plot(xs, counts.values, color=ACID, linewidth=2, marker='o', markersize=7,
+            markerfacecolor=VIOLET, markeredgecolor=ACID, markeredgewidth=1.5, zorder=4)
+    ax.scatter(xs, counts.values, s=160, color=VIOLET, alpha=0.12, zorder=2)
+    ax.scatter(xs, counts.values, s=60, color=ACID, alpha=0.22, zorder=3)
+    ax.fill_between(xs, counts.values, alpha=0.07, color=ACID, zorder=2)
+    ax.set_xticks(xs); ax.set_xticklabels(counts.index, rotation=45, ha='right', fontsize=7.5)
+    ax.yaxis.grid(True, zorder=0, alpha=0.3)
+    ax.set_ylabel("Count", fontsize=8, color='#5a6480')
+
+elif chart_type == "Horizontal Bar":
+    for i, (label, val) in enumerate(zip(counts.index, counts.values)):
+        c = colors[i % len(colors)]
+        for extra, alpha in [(0.18, 0.05), (0.10, 0.10), (0.04, 0.16)]:
+            ax.barh(label, val, color=c, height=0.55+extra, edgecolor='none', alpha=alpha, zorder=1)
+        ax.barh(label, val, color=c, height=0.55, edgecolor='none', zorder=3)
+    ax.xaxis.grid(True, zorder=0, alpha=0.3)
+    ax.set_xlabel("Count", fontsize=8, color='#5a6480')
+    ax.tick_params(axis='y', labelsize=7.5)
+
+elif chart_type == "Area":
+    xs = list(range(len(counts)))
+    add_line_glow(ax, xs, counts.values, ACID)
+    ax.fill_between(xs, counts.values, alpha=0.26, color=ACID, zorder=2)
+    ax.fill_between(xs, counts.values, alpha=0.06, color=VIOLET, zorder=2)
+    ax.plot(xs, counts.values, color=ACID, linewidth=2, zorder=3)
+    ax.set_xticks(xs); ax.set_xticklabels(counts.index, rotation=45, ha='right', fontsize=7.5)
+    ax.yaxis.grid(True, alpha=0.3)
+
+ax.set_title(f"{cat_col}  ·  {chart_type}", fontsize=10, pad=12, color='#e8edf8', fontweight='bold')
+plt.xticks(rotation=45, ha='right', fontsize=7.5)
+plt.yticks(fontsize=7.5)
+for spine in ax.spines.values():
+    spine.set_edgecolor('#1e2940')
+plt.tight_layout(pad=1.1)
+st.pyplot(fig)
+plt.close(fig)
+
+# ── Auto insights ─────────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="sec-label">Auto</div><span class="sec-title">Insights</span>', unsafe_allow_html=True)
+
+found = False
+for col in filtered.columns:
+    if filtered[col].astype(str).nunique() <= 10:
+        found = True
+        ac = filtered[col].astype(str).value_counts()
+        st.markdown(
+            f'<span style="font-family:JetBrains Mono,monospace;font-size:10px;'
+            f'letter-spacing:2px;text-transform:uppercase;color:#5a6480">{col}</span>',
+            unsafe_allow_html=True
+        )
+        fig2, ax2 = plt.subplots(figsize=(14, 3.0))
+        fig2.patch.set_facecolor('#080b14')
+        ax2.set_facecolor('#0d1120')
+        ax2.set_axisbelow(True)
+        colors2 = PALETTE[:len(ac)]
+        x2 = list(range(len(ac)))
+        for xp, h, c in zip(x2, ac.values, colors2):
+            for extra_w, alpha in [(0.28, 0.05), (0.15, 0.09), (0.06, 0.14)]:
+                ax2.bar(xp, h, color=c, width=0.55+extra_w, edgecolor='none', alpha=alpha, zorder=1)
+        ax2.bar(x2, ac.values, color=colors2, zorder=3, width=0.55, edgecolor='none')
+        ax2.set_xticks(x2); ax2.set_xticklabels(ac.index, rotation=45, ha='right', fontsize=7)
+        ax2.yaxis.grid(True, zorder=0, alpha=0.3)
+        ax2.set_title(f"Distribution — {col}", pad=10, color='#9aa5be', fontsize=9)
+        ax2.tick_params(colors='#5a6480', labelsize=7)
+        for spine in ax2.spines.values():
+            spine.set_edgecolor('#1e2940')
+        plt.tight_layout(pad=1.0)
+        st.pyplot(fig2)
+        plt.close(fig2)
+
+if not found:
+    st.info("No columns with ≤ 10 unique values found for auto insights.")
+
+# ── Export ────────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown('<div class="sec-label">Export</div><span class="sec-title">Download</span>', unsafe_allow_html=True)
+st.download_button(
+    "⬇  Download Filtered CSV",
+    data=filtered.to_csv(index=False),
+    file_name="filtered_xray_data.csv",
+    mime="text/csv"
+)
+`;
+
+mount(
+  {
+    requirements: ["pandas","matplotlib","numpy"],
+    entrypoint: "app.py",
+    files: { "app.py": APP }
+  },
+  document.getElementById("root")
+);
+
+// Detect when stlite is ready
+const obs = new MutationObserver(() => {
+  if (document.querySelector('.stApp')?.children.length > 0) {
+    document.getElementById('loading').classList.add('gone');
+    obs.disconnect();
+  }
+});
+obs.observe(document.getElementById('root'), { childList: true, subtree: true });
+setTimeout(() => document.getElementById('loading').classList.add('gone'), 14000);
+</script>
+</body>
+</html>
